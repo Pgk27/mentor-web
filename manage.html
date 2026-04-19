@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Mentor - MentU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-900 rounded flex items-center justify-center text-white font-bold">
+                    M
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-blue-900">MentU</h1>
+                    <p class="text-xs text-gray-500">Trang quản lý mentor</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <a href="user.html" class="bg-blue-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition">
+                    Thêm mentor
+                </a>
+                <a href="index.html" class="border border-blue-900 text-blue-900 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition">
+                    Về trang chủ
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Danh sách mentor</h2>
+                    <p class="text-sm text-gray-500 mt-1">Bạn có thể xóa những mentor không phù hợp khỏi hệ thống.</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Tìm theo tên, chức vụ, công ty..."
+                        class="w-full md:w-80 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-blue-900"
+                    >
+                    <button
+                        onclick="loadMentors()"
+                        class="bg-blue-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition"
+                    >
+                        Tải lại
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mentorCount" class="text-sm text-gray-600 mb-4">Đang tải dữ liệu...</div>
+
+        <div id="mentorList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
+                Đang tải mentor...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAGk1ElxXExiYyrzQzQ_wqLobafBs__muk",
+            authDomain: "mentor-web-add47.firebaseapp.com",
+            databaseURL: "https://mentor-web-add47-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mentor-web-add47",
+            storageBucket: "mentor-web-add47.firebasestorage.app",
+            messagingSenderId: "595535263471",
+            appId: "1:595535263471:web:0d703f288f552421254d1a",
+            measurementId: "G-90SRNQD7GD"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        firebase.auth().signInAnonymously().catch(err => {
+            console.error('Firebase auth error:', err);
+            alert('Không thể kết nối Firebase. Vui lòng thử lại sau.');
+        });
+
+        const db = firebase.database();
+        let allMentors = [];
+
+        function loadMentors() {
+            const list = document.getElementById('mentorList');
+            const count = document.getElementById('mentorCount');
+
+            list.innerHTML = `
+                <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
+                    Đang tải mentor...
+                </div>
+            `;
+            count.innerText = 'Đang tải dữ liệu...';
+
+            const mentorsRef = db.ref('mentors');
+            mentorsRef.off('value');
+            mentorsRef.on('value', snapshot => {
+                const data = snapshot.val() || {};
+                allMentors = Object.values(data).sort((a, b) => Number(b.id) - Number(a.id));
+                renderMentors();
+            }, error => {
+                console.error(error);
+                count.innerText = 'Không thể tải dữ liệu';
+                list.innerHTML = `
+                    <div class="col-span-full bg-red-50 text-red-600 rounded-2xl p-6 border border-red-200">
+                        Lỗi tải dữ liệu từ Firebase.
+                    </div>
+                `;
+            });
+        }
+
+        function renderMentors() {
+            const list = document.getElementById('mentorList');
+            const count = document.getElementById('mentorCount');
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            const filtered = allMentors.filter(mentor => {
+                const text = `
+                    ${mentor.name || ''}
+                    ${mentor.role || ''}
+                    ${mentor.company || ''}
+                    ${(mentor.skills || []).join(' ')}
+                    ${mentor.lang || ''}
+                `.toLowerCase();
+
+                return text.includes(keyword);
+            });
+
+            count.innerText = `Tổng ${filtered.length} mentor`;
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
+                        Không tìm thấy mentor nào.
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(mentor => `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="h-24 bg-blue-900"></div>
+
+                    <div class="px-6 pb-6 -mt-10">
+                        <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-white bg-gray-200 shadow-md">
+                            <img src="${mentor.avatar}" alt="${mentor.name}" class="w-full h-full object-cover">
+                        </div>
+
+                        <div class="mt-4">
+                            <h3 class="text-xl font-bold text-gray-900">${mentor.name || 'Không có tên'}</h3>
+                            <p class="text-sm text-blue-700 font-semibold uppercase mt-1">${mentor.role || 'Mentor'}</p>
+                            <p class="text-sm text-gray-500 mt-1">${mentor.company || 'MentU'}</p>
+
+                            <div class="mt-4">
+                                <p class="text-xs font-bold text-gray-400 uppercase mb-2">Kỹ năng</p>
+                                <div class="flex flex-wrap gap-2">
+                                    ${(mentor.skills || []).map(skill => `
+                                        <span class="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">${skill}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <p class="text-xs font-bold text-gray-400 uppercase mb-2">Minh chứng chứng chỉ</p>
+                                <div class="flex">
+                                    ${mentor.certificate ? `<img src="${mentor.certificate}" class="w-16 h-16 object-cover rounded border">` : '<span class="text-gray-400 text-sm">Chưa có</span>'}
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Ngôn ngữ: <b>${mentor.lang || 'vn'}</b></span>
+                                <a href="profile.html?id=${mentor.id}" class="text-blue-900 font-semibold text-sm hover:underline">
+                                    Xem hồ sơ
+                                </a>
+                            </div>
+
+                            <button
+                                onclick="deleteMentor('${mentor.id}', '${(mentor.name || '').replace(/'/g, "\\'")}')"
+                                class="mt-5 w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition"
+                            >
+                                Xóa mentor này
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteMentor(id, name) {
+            const confirmDelete = confirm(`Bạn có chắc muốn xóa mentor "${name}" không?`);
+            if (!confirmDelete) return;
+
+            db.ref(`mentors/${id}`).remove()
+                .then(() => {
+                    alert('Đã xóa mentor thành công');
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Lỗi khi xóa mentor');
+                });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderMentors);
+
+        loadMentors();
+    </script>
+</body>
+</html>

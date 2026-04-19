@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentU - Bridging Talents, Guiding Success</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .active-nav { border-bottom: 2px solid #d4af37; color: #1e3a8a; font-weight: 700; }
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        .nav-link { cursor: pointer; transition: all 0.25s; }
+        .nav-link:hover { color: #1e3a8a; }
+        .mentor-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12); }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-[#f5f5f7] font-sans text-slate-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('home')">
+                <div class="w-11 h-11 bg-blue-900 flex items-center justify-center rounded-md shadow-sm">
+                    <i class="fas fa-graduation-cap text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-blue-900 leading-none">MentU</h1>
+                    <p class="text-[10px] text-slate-500 italic uppercase tracking-tight">Bridging Talents, Guiding Success</p>
+                </div>
+            </div>
+            
+            <nav class="hidden md:flex gap-6 text-sm font-semibold text-slate-700">
+                <a onclick="showPage('home')" class="nav-link px-2 py-1">HOME</a>
+                <a onclick="showPage('find-mentor')" class="nav-link active-nav px-2 py-1">FIND MENTOR</a>
+                <a onclick="showPage('resources')" class="nav-link px-2 py-1">RESOURCES</a>
+                <a onclick="showPage('dashboard')" class="nav-link px-2 py-1">DASHBOARD</a>
+                <a onclick="showPage('about')" class="nav-link px-2 py-1">ABOUT US</a>
+                <!-- <a href="manage.html" class="nav-link px-2 py-1">MANAGE</a> -->
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <a href="user.html" title="Thêm mentor">
+                    <button class="bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-800 transition shadow-sm">
+                        REGISTER
+                    </button>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main id="find-mentor" class="page-content active">
+        <section class="bg-blue-950 py-12 md:py-14 text-center shadow-inner">
+            <div class="max-w-4xl mx-auto px-4">
+                <h2 class="text-white text-4xl md:text-5xl font-black mb-6 uppercase tracking-wide">Find a Mentor</h2>
+                <div class="max-w-xl mx-auto relative">
+                    <input
+                        type="text"
+                        id="mainSearch"
+                        placeholder="Quick search mentor, kỹ năng, công ty..."
+                        class="w-full h-14 rounded-full border-4 border-white/10 bg-white px-6 pr-16 outline-none text-slate-700 shadow-2xl"
+                    >
+                    <button
+                        onclick="renderMentors()"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-[#d4af37] text-white w-11 h-11 rounded-full hover:brightness-95 transition"
+                    >
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <aside class="w-full lg:w-[290px] lg:sticky lg:top-24">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200">
+                            <div class="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="sideSearch"
+                                    placeholder="Search"
+                                    class="flex-1 h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-blue-900"
+                                >
+                                <button onclick="renderMentors()" class="w-11 h-11 rounded-xl bg-[#d4af37] text-white hover:brightness-95 transition">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mt-3 text-sm font-semibold">
+                                <button class="bg-blue-900 text-white py-2 rounded-lg">Filters</button>
+                                <button onclick="resetFilters()" class="border border-slate-300 text-slate-600 py-2 rounded-lg hover:bg-slate-50">Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-2">Language</label>
+                                <select id="languageFilter" class="w-full h-11 rounded-xl border border-slate-300 px-3 bg-white outline-none focus:border-blue-900">
+                                    <option value="">Tất cả</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2">Industry / Company</label>
+                                <input id="companyFilter" type="text" placeholder="Ví dụ: Marketing, BigCorp..." class="w-full h-11 rounded-xl border border-slate-300 px-3 outline-none focus:border-blue-900">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2">Skill</label>
+                                <input id="skillFilter" type="text" placeholder="VD: CV Review, HSK 6..." class="w-full h-11 rounded-xl border border-slate-300 px-3 outline-none focus:border-blue-900">
+                            </div>
+                            <button onclick="renderMentors()" class="w-full bg-blue-50 text-blue-900 py-3 rounded-xl font-bold hover:bg-blue-100 transition">
+                                Áp dụng bộ lọc
+                            </button>
+                        </div>
+
+                        <div class="mx-4 mb-4 rounded-2xl bg-slate-50 border border-slate-200 p-6 text-center">
+                            <div class="w-14 h-14 mx-auto rounded-xl bg-blue-900 text-white flex items-center justify-center mb-3 shadow-sm">
+                                <i class="fas fa-user-graduate text-xl"></i>
+                            </div>
+                            <h4 class="text-2xl font-black text-blue-900">MentU</h4>
+                            <p class="text-xs text-slate-500 mt-1">Bridging Talents, Guiding Success</p>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="flex-1 w-full">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+                        <div>
+                            <h3 class="text-3xl font-black uppercase tracking-tight text-slate-900">Featured Mentors</h3>
+                            <p class="text-sm text-slate-500 mt-1">Bấm <span class="font-semibold">Xem chi tiết</span> để mở thông tin mentor ngay tại trang chủ.</p>
+                        </div>
+                        <span class="text-sm text-slate-500 italic" id="mentor-count">Đang tải...</span>
+                    </div>
+
+                    <div id="mentor-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div class="col-span-full py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                            <i class="fas fa-circle-notch fa-spin text-3xl mb-4 text-blue-900"></i>
+                            <p>Đang kết nối tới database MentU...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="home" class="page-content">
+        <section class="bg-blue-950 py-24 text-center text-white">
+            <h2 class="text-5xl md:text-6xl font-black mb-4 tracking-tight">Connect Your Future</h2>
+            <p class="text-lg md:text-xl opacity-80 mb-10 max-w-2xl mx-auto leading-relaxed">Học hỏi kinh nghiệm thực chiến từ các anh chị cựu sinh viên và chuyên gia hàng đầu trong ngành ngôn ngữ.</p>
+            <button onclick="showPage('find-mentor')" class="bg-[#d4af37] hover:brightness-95 text-white px-10 py-4 rounded-full font-bold text-lg transition shadow-xl transform hover:-translate-y-1">
+                KHÁM PHÁ MENTOR NGAY
+            </button>
+        </section>
+    </div>
+
+    <div id="resources" class="page-content max-w-7xl mx-auto px-4 py-14">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center">
+            <h3 class="text-3xl font-black mb-3">Resources</h3>
+            <p class="text-slate-500">Bạn có thể thêm khu vực tài liệu học tập ở đây sau.</p>
+        </div>
+    </div>
+
+    <div id="dashboard" class="page-content max-w-7xl mx-auto px-4 py-14">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center">
+            <h3 class="text-3xl font-black mb-3">Dashboard</h3>
+            <p class="text-slate-500">Trang này đang chờ bạn bổ sung thống kê và quản lý dữ liệu.</p>
+        </div>
+    </div>
+
+    <div id="about" class="page-content max-w-7xl mx-auto px-4 py-14">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center">
+            <h3 class="text-3xl font-black mb-3">About MentU</h3>
+            <p class="text-slate-500">MentU kết nối mentor và sinh viên để chia sẻ kinh nghiệm học tập, nghề nghiệp và định hướng tương lai.</p>
+        </div>
+    </div>
+
+    <div id="mentorModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/65 p-4">
+        <div class="w-full max-w-4xl bg-white rounded-[28px] overflow-hidden shadow-2xl border border-slate-200 relative">
+            <button onclick="closeMentorModal()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/90 text-slate-600 hover:text-red-500 shadow">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="mentorModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAGk1ElxXExiYyrzQzQ_wqLobafBs__muk",
+            authDomain: "mentor-web-add47.firebaseapp.com",
+            databaseURL: "https://mentor-web-add47-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mentor-web-add47",
+            storageBucket: "mentor-web-add47.firebasestorage.app",
+            messagingSenderId: "595535263471",
+            appId: "1:595535263471:web:0d703f288f552421254d1a",
+            measurementId: "G-90SRNQD7GD"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        firebase.auth().signInAnonymously().catch(err => {
+            console.error('Firebase auth error:', err);
+            alert('Không thể kết nối Firebase. Vui lòng thử lại sau.');
+        });
+
+        let allMentors = [];
+        const db = firebase.database();
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('active-nav');
+                const action = l.getAttribute('onclick');
+                if (action && action.includes(pageId)) {
+                    l.classList.add('active-nav');
+                }
+            });
+
+            if (pageId === 'find-mentor') {
+                renderMentors();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function escapeHtml(text = '') {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function initialsFromName(name = '') {
+            return name
+                .split(' ')
+                .filter(Boolean)
+                .slice(-2)
+                .map(part => part[0]?.toUpperCase() || '')
+                .join('') || 'M';
+        }
+
+        function getSafeAvatar(mentor) {
+            if (mentor.avatar && mentor.avatar.trim()) return mentor.avatar;
+            const seed = encodeURIComponent(mentor.name || 'Mentor');
+            return `https://ui-avatars.com/api/?name=${seed}&background=1e3a8a&color=ffffff`;
+        }
+
+        function normalize(text = '') {
+            return String(text).trim().toLowerCase();
+        }
+
+        function formatSkills(skills) {
+            if (!Array.isArray(skills) || !skills.length) return ['Mentoring'];
+            return skills.filter(Boolean);
+        }
+
+        function populateLanguageFilter() {
+            const select = document.getElementById('languageFilter');
+            const currentValue = select.value;
+            const langs = [...new Set(allMentors.map(m => (m.lang || '').trim()).filter(Boolean))].sort();
+            select.innerHTML = '<option value="">Tất cả</option>' + langs.map(lang => `<option value="${escapeHtml(lang)}">${escapeHtml(lang.toUpperCase())}</option>`).join('');
+            select.value = currentValue;
+        }
+
+        function getFilteredMentors() {
+            const mainSearch = normalize(document.getElementById('mainSearch').value);
+            const sideSearch = normalize(document.getElementById('sideSearch').value);
+            const languageFilter = normalize(document.getElementById('languageFilter').value);
+            const companyFilter = normalize(document.getElementById('companyFilter').value);
+            const skillFilter = normalize(document.getElementById('skillFilter').value);
+
+            return allMentors.filter(mentor => {
+                const searchableText = normalize([
+                    mentor.name,
+                    mentor.role,
+                    mentor.company,
+                    mentor.lang,
+                    ...(mentor.skills || [])
+                ].join(' '));
+
+                const matchesMain = !mainSearch || searchableText.includes(mainSearch);
+                const matchesSide = !sideSearch || searchableText.includes(sideSearch);
+                const matchesLang = !languageFilter || normalize(mentor.lang) === languageFilter;
+                const matchesCompany = !companyFilter || searchableText.includes(companyFilter);
+                const matchesSkill = !skillFilter || (mentor.skills || []).join(' ').toLowerCase().includes(skillFilter);
+
+                return matchesMain && matchesSide && matchesLang && matchesCompany && matchesSkill;
+            });
+        }
+
+        function renderMentors() {
+            const container = document.getElementById('mentor-list');
+            const countLabel = document.getElementById('mentor-count');
+            const mentors = getFilteredMentors();
+
+            countLabel.innerText = `${mentors.length} mentor phù hợp`;
+
+            if (!mentors.length) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-slate-400 shadow-sm">
+                        <i class="fas fa-user-slash text-3xl mb-3"></i>
+                        <p class="font-semibold text-slate-600">Không tìm thấy mentor phù hợp</p>
+                        <p class="text-sm mt-1">Bạn thử đổi từ khóa hoặc bấm Reset bộ lọc.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = mentors.map((mentor, index) => {
+                const safeAvatar = getSafeAvatar(mentor);
+                const skills = formatSkills(mentor.skills).slice(0, 3);
+                const company = mentor.company || 'MentU';
+                const role = mentor.role || 'Mentor';
+                const lang = (mentor.lang || 'vn').toUpperCase();
+                const bgTone = index % 3 === 0 ? 'from-blue-950 to-blue-800' : index % 3 === 1 ? 'from-blue-900 to-slate-800' : 'from-slate-900 to-blue-900';
+
+                return `
+                    <div class="mentor-card bg-white rounded-[26px] overflow-hidden border border-slate-200 shadow-sm flex flex-col transition duration-300">
+                        <div class="h-24 bg-gradient-to-r ${bgTone}"></div>
+                        <div class="px-5 pb-5 -mt-12 relative z-10 flex-1 flex flex-col text-center">
+                            <div class="w-24 h-24 rounded-full mx-auto border-[5px] border-[#d4af37] shadow-md bg-slate-100 overflow-hidden mb-4">
+                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'w-full h-full flex items-center justify-center text-blue-900 font-black text-xl bg-slate-100\'>${initialsFromName(mentor.name)}</div>'">
+                            </div>
+
+                            <h4 class="font-black text-2xl text-slate-900 leading-tight">${escapeHtml(mentor.name || 'Chưa có tên')}</h4>
+                            <p class="text-sm text-slate-600 mt-1 line-clamp-2 min-h-[40px]">${escapeHtml(role)} @ ${escapeHtml(company)}</p>
+
+                            <div class="mt-5 grid grid-cols-2 gap-3">
+                                <button onclick="openMentorModal('${mentor.id}')" class="border-2 border-slate-900 text-slate-900 py-3 rounded-xl font-bold text-sm hover:bg-slate-900 hover:text-white transition">
+                                    XEM CHI TIẾT
+                                </button>
+                                <a href="profile.html?id=${mentor.id}" class="bg-[#d4af37] text-white py-3 rounded-xl font-bold text-sm hover:brightness-95 transition flex items-center justify-center">
+                                    VIEW PROFILE
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openMentorModal(mentorId) {
+            const mentor = allMentors.find(item => String(item.id) === String(mentorId));
+            if (!mentor) return;
+
+            const skills = formatSkills(mentor.skills);
+            const safeAvatar = getSafeAvatar(mentor);
+            const company = mentor.company || 'MentU';
+            const role = mentor.role || 'Mentor';
+            const lang = (mentor.lang || 'vn').toUpperCase();
+            const modal = document.getElementById('mentorModal');
+            const content = document.getElementById('mentorModalContent');
+
+            content.innerHTML = `
+                <div class="h-44 md:h-52 bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800"></div>
+                <div class="px-6 md:px-10 pb-8 md:pb-10 -mt-6 relative">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                        <div class="flex flex-col md:flex-row md:items-end gap-5">
+                            <div class="w-32 h-32 rounded-full border-[6px] border-[#d4af37] bg-white shadow-xl overflow-hidden">
+                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'w-full h-full flex items-center justify-center text-blue-900 font-black text-3xl bg-slate-100\'>${initialsFromName(mentor.name)}</div>'">
+                            </div>
+                            <div>
+                                <h3 class="text-3xl md:text-4xl font-black text-slate-900">${escapeHtml(mentor.name || 'Chưa có tên')}</h3>
+                                <p class="text-lg text-blue-900 font-bold mt-2">${escapeHtml(role)}</p>
+                                <p class="text-slate-600 mt-1">${escapeHtml(company)}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="profile.html?id=${mentor.id}" class="px-5 py-3 rounded-xl border-2 border-slate-900 font-bold text-slate-900 hover:bg-slate-900 hover:text-white transition">Trang hồ sơ</a>
+                            <a href="user.html" class="px-5 py-3 rounded-xl bg-[#d4af37] font-bold text-white hover:brightness-95 transition">Đặt lịch / liên hệ</a>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4 mt-8">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-slate-400 font-bold">Ngôn ngữ</p>
+                            <p class="text-lg font-black text-slate-900 mt-2">${escapeHtml(lang)}</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-slate-400 font-bold">Chức vụ</p>
+                            <p class="text-lg font-black text-slate-900 mt-2">${escapeHtml(role)}</p>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs uppercase tracking-wide text-slate-400 font-bold">Công ty / đơn vị</p>
+                            <p class="text-lg font-black text-slate-900 mt-2">${escapeHtml(company)}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <h4 class="text-xl font-black text-slate-900 mb-3">Kỹ năng & thế mạnh</h4>
+                        <div class="flex flex-wrap gap-3">
+                            ${skills.map(skill => `<span class="px-4 py-2 rounded-full bg-blue-50 text-blue-900 border border-blue-100 font-semibold">${escapeHtml(skill)}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeMentorModal() {
+            const modal = document.getElementById('mentorModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function resetFilters() {
+            document.getElementById('mainSearch').value = '';
+            document.getElementById('sideSearch').value = '';
+            document.getElementById('languageFilter').value = '';
+            document.getElementById('companyFilter').value = '';
+            document.getElementById('skillFilter').value = '';
+            renderMentors();
+        }
+
+        function loadMentors() {
+            const container = document.getElementById('mentor-list');
+            const countLabel = document.getElementById('mentor-count');
+
+            container.innerHTML = `
+                <div class="col-span-full py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm">
+                    <i class="fas fa-circle-notch fa-spin text-3xl mb-4 text-blue-900"></i>
+                    <p>Đang kết nối tới database MentU...</p>
+                </div>
+            `;
+            countLabel.innerText = 'Đang tải...';
+
+            db.ref('mentors').on('value', snapshot => {
+                const data = snapshot.val() || {};
+                allMentors = Object.values(data).sort((a, b) => Number(b.id) - Number(a.id));
+                populateLanguageFilter();
+                renderMentors();
+            }, error => {
+                console.error('Firebase load error:', error);
+                countLabel.innerText = 'Không tải được dữ liệu';
+                container.innerHTML = `
+                    <div class="col-span-full bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 text-center shadow-sm">
+                        <i class="fas fa-exclamation-triangle mb-2 text-2xl"></i>
+                        <p class="font-bold">Lỗi kết nối Firebase!</p>
+                        <p class="text-sm mt-1">Vui lòng kiểm tra cấu hình hoặc thử lại sau.</p>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('mainSearch').addEventListener('input', renderMentors);
+        document.getElementById('sideSearch').addEventListener('input', renderMentors);
+        document.getElementById('languageFilter').addEventListener('change', renderMentors);
+        document.getElementById('companyFilter').addEventListener('input', renderMentors);
+        document.getElementById('skillFilter').addEventListener('input', renderMentors);
+
+        document.getElementById('mentorModal').addEventListener('click', function (event) {
+            if (event.target.id === 'mentorModal') closeMentorModal();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeMentorModal();
+        });
+
+        window.onload = loadMentors;
+    </script>
+</body>
+</html>

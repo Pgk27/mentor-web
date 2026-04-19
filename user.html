@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Mentor - MentU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
+        <h2 class="text-2xl font-bold mb-6 text-blue-900 border-b pb-2">Thêm Mentor Mới</h2>
+        
+        <form id="userForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Họ tên</label>
+                    <input type="text" id="name" class="w-full border p-2 rounded" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Chức vụ</label>
+                    <input type="text" id="role" class="w-full border p-2 rounded" placeholder="Vd: Sr. Translator">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium">Mã số sinh viên (MSSV)</label>
+                <input type="text" id="mssv" class="w-full border p-2 rounded" placeholder="Vd: 12345678">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Kỹ năng (Cách nhau bằng dấu phẩy)</label>
+                <input type="text" id="skills" class="w-full border p-2 rounded" placeholder="Vd: HSK 6, Biên dịch, Thuyết trình">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">Khoa</label>
+                <select id="khoa" class="w-full border p-2 rounded">
+                    <option value="">Chọn khoa</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Anh">Khoa Ngôn ngữ và Văn hóa Anh</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Trung Quốc">Khoa Ngôn ngữ và Văn hóa Trung Quốc</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Nhật Bản">Khoa Ngôn ngữ và Văn hóa Nhật Bản</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Hàn Quốc">Khoa Ngôn ngữ và Văn hóa Hàn Quốc</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Pháp">Khoa Ngôn ngữ và Văn hóa Pháp</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Nga">Khoa Ngôn ngữ và Văn hóa Nga</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Đức">Khoa Ngôn ngữ và Văn hóa Đức</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Ả Rập">Khoa Ngôn ngữ và Văn hóa Ả Rập</option>
+                    <option value="Khoa Ngôn ngữ và Văn hóa Việt Nam - Đông Nam Á">Khoa Ngôn ngữ và Văn hóa Việt Nam - Đông Nam Á</option>
+                    <option value="Khoa Giáo dục Quốc tế">Khoa Giáo dục Quốc tế</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Mã ngôn ngữ (vn, cn, us...)</label>
+                    <input type="text" id="lang" class="w-full border p-2 rounded" placeholder="Vd: vn">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Ảnh đại diện (Chọn từ máy)</label>
+                    <input type="file" id="avatarFile" accept="image/*" class="w-full border p-2 rounded bg-gray-50 text-sm">
+                    <input type="hidden" id="avatarBase64">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">Minh chứng chứng chỉ</label>
+                <input type="file" id="certificateFile" accept="image/*" class="w-full border p-2 rounded bg-gray-50 text-sm">
+                <input type="hidden" id="certificateBase64">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-900 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition shadow-lg mt-4">
+                LƯU THÔNG TIN MENTOR
+            </button>
+        </form>
+        
+        <div class="mt-8 text-center">
+            <a href="index.html" class="text-blue-600 hover:underline">← Quay lại trang chủ</a>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAGk1ElxXExiYyrzQzQ_wqLobafBs__muk",
+            authDomain: "mentor-web-add47.firebaseapp.com",
+            databaseURL: "https://mentor-web-add47-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mentor-web-add47",
+            storageBucket: "mentor-web-add47.firebasestorage.app",
+            messagingSenderId: "595535263471",
+            appId: "1:595535263471:web:0d703f288f552421254d1a",
+            measurementId: "G-90SRNQD7GD"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        firebase.auth().signInAnonymously().catch(err => {
+            console.error('Firebase auth error:', err);
+            alert('Không thể kết nối Firebase. Vui lòng thử lại sau.');
+        });
+
+        const db = firebase.database();
+        let certificateBase64 = '';
+
+        document.getElementById('avatarFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 1024 * 1024) {
+                alert('Ảnh hơi nặng (hơn 1MB), bạn nên chọn ảnh nhẹ hơn để web load nhanh nhé!');
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                document.getElementById('avatarBase64').value = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('certificateFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) {
+                certificateBase64 = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                certificateBase64 = reader.result;
+                document.getElementById('certificateBase64').value = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('userForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const inputName = document.getElementById('name').value.trim();
+            const base64Data = document.getElementById('avatarBase64').value;
+            const mentorId = Date.now().toString();
+
+            const userData = {
+                id: mentorId,
+                name: inputName,
+                role: document.getElementById('role').value.trim() || 'Mentor',
+                mssv: document.getElementById('mssv').value.trim(),
+                skills: document.getElementById('skills').value
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean),
+                lang: document.getElementById('lang').value.trim() || 'vn',
+                khoa: document.getElementById('khoa').value,
+                certificate: certificateBase64,
+                avatar: base64Data || `https://ui-avatars.com/api/?name=${encodeURIComponent(inputName)}&background=random`
+            };
+
+            db.ref(`mentors/${mentorId}`).set(userData)
+                .then(() => {
+                    alert('Lưu thành công!');
+                    document.getElementById('userForm').reset();
+                    document.getElementById('avatarBase64').value = '';
+                    certificateBase64 = '';
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lưu dữ liệu lên Firebase:', error);
+                    alert('Có lỗi khi lưu dữ liệu. Vui lòng thử lại.');
+                });
+        });
+    </script>
+</body>
+</html>
