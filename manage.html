@@ -126,7 +126,7 @@
                 const text = `
                     ${mentor.name || ''}
                     ${mentor.role || ''}
-                    ${mentor.company || ''}
+                    ${mentor.khoa || ''}
                     ${(mentor.skills || []).join(' ')}
                     ${mentor.lang || ''}
                 `.toLowerCase();
@@ -157,7 +157,7 @@
                         <div class="mt-4">
                             <h3 class="text-xl font-bold text-gray-900">${mentor.name || 'Không có tên'}</h3>
                             <p class="text-sm text-blue-700 font-semibold uppercase mt-1">${mentor.role || 'Mentor'}</p>
-                            <p class="text-sm text-gray-500 mt-1">${mentor.company || 'MentU'}</p>
+                            <p class="text-sm text-gray-500 mt-1">${mentor.khoa || 'MentU'}</p>
 
                             <div class="mt-4">
                                 <p class="text-xs font-bold text-gray-400 uppercase mb-2">Kỹ năng</p>
@@ -169,6 +169,11 @@
                             </div>
 
                             <div class="mt-4">
+                                <p class="text-xs font-bold text-gray-400 uppercase mb-2">Email</p>
+                                <p class="text-sm text-gray-700">${mentor.email || 'Chưa có'}</p>
+                            </div>
+
+                            <div class="mt-4">
                                 <p class="text-xs font-bold text-gray-400 uppercase mb-2">Minh chứng chứng chỉ</p>
                                 <div class="flex">
                                     ${mentor.certificate ? `<img src="${mentor.certificate}" class="w-16 h-16 object-cover rounded border">` : '<span class="text-gray-400 text-sm">Chưa có</span>'}
@@ -176,7 +181,7 @@
                             </div>
 
                             <div class="mt-4 flex items-center justify-between">
-                                <span class="text-sm text-gray-600">Ngôn ngữ: <b>${mentor.lang || 'vn'}</b></span>
+                                <span class="text-sm text-gray-600">Ngôn ngữ: <b>${mentor.lang || 'Chưa có'}</b></span>
                                 <a href="profile.html?id=${mentor.id}" class="text-blue-900 font-semibold text-sm hover:underline">
                                     Xem hồ sơ
                                 </a>

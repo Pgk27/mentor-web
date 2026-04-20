@@ -2,18 +2,49 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Mentor - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 0.5rem;
+            }
+            .max-w-2xl {
+                max-width: 100%;
+                padding: 0.5rem;
+                margin: 0;
+            }
+            input, select, textarea {
+                font-size: 16px; /* Prevent zoom on iOS */
+                padding: 0.5rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+                margin-bottom: 1rem;
+            }
+            .grid-cols-1.md\:grid-cols-2 {
+                grid-template-columns: 1fr; /* Force single column on mobile */
+                gap: 0.5rem;
+            }
+            .space-y-4 > * + * {
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md">
         <h2 class="text-2xl font-bold mb-6 text-blue-900 border-b pb-2">Thêm Mentor Mới</h2>
         
         <form id="userForm" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium">Họ tên</label>
                     <input type="text" id="name" class="w-full border p-2 rounded" required>
@@ -27,6 +58,11 @@
             <div>
                 <label class="block text-sm font-medium">Mã số sinh viên (MSSV)</label>
                 <input type="text" id="mssv" class="w-full border p-2 rounded" placeholder="Vd: 12345678">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">Email</label>
+                <input type="email" id="email" class="w-full border p-2 rounded" required>
             </div>
 
             <div>
@@ -51,10 +87,10 @@
                 </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium">Mã ngôn ngữ (vn, cn, us...)</label>
-                    <input type="text" id="lang" class="w-full border p-2 rounded" placeholder="Vd: vn">
+                    <label class="block text-sm font-medium">Ngôn ngữ muốn dạy (Tiếng Anh,...)</label>
+                    <input type="text" id="lang" class="w-full border p-2 rounded" placeholder="Vd: Tiếng Anh">
                 </div>
                 <div>
                     <label class="block text-sm font-medium">Ảnh đại diện (Chọn từ máy)</label>
@@ -73,6 +109,10 @@
                 LƯU THÔNG TIN MENTOR
             </button>
         </form>
+        
+        <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            Đăng ký thành công! Mentor đã được thêm vào hệ thống.
+        </div>
         
         <div class="mt-8 text-center">
             <a href="index.html" class="text-blue-600 hover:underline">← Quay lại trang chủ</a>
@@ -143,6 +183,7 @@
                 name: inputName,
                 role: document.getElementById('role').value.trim() || 'Mentor',
                 mssv: document.getElementById('mssv').value.trim(),
+                email: document.getElementById('email').value.trim(),
                 skills: document.getElementById('skills').value
                     .split(',')
                     .map(s => s.trim())
@@ -155,10 +196,13 @@
 
             db.ref(`mentors/${mentorId}`).set(userData)
                 .then(() => {
-                    alert('Lưu thành công!');
+                    document.getElementById('successMessage').classList.remove('hidden');
                     document.getElementById('userForm').reset();
                     document.getElementById('avatarBase64').value = '';
                     certificateBase64 = '';
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.add('hidden');
+                    }, 5000);
                 })
                 .catch(error => {
                     console.error('Lỗi khi lưu dữ liệu lên Firebase:', error);

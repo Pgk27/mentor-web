@@ -70,11 +70,11 @@
                                     <div class="text-center lg:text-left max-w-2xl">
                                         <span class="inline-block rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-[0.35em] text-slate-100 shadow-sm backdrop-blur-sm">Mentor</span>
                                         <h1 class="mt-4 text-5xl font-extrabold text-white tracking-tight">${mentor.name}</h1>
-                                        <p class="mt-3 text-lg text-black">${mentor.role}${mentor.company ? ` @ ${mentor.company}` : ''}</p>
+                                        <p class="mt-3 text-lg text-black">${mentor.role}${mentor.khoa ? ` @ ${mentor.khoa}` : ''}</p>
                                     </div>
                                 </div>
 
-                                <div class="mt-8 grid gap-4 sm:grid-cols-3 text-sm text-slate-900">
+                                <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm text-slate-900">
                                     <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
                                         <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">MSSV</p>
                                         <p class="font-semibold text-slate-900">${mentor.mssv || 'Chưa cập nhật'}</p>
@@ -85,7 +85,11 @@
                                     </div>
                                     <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
                                         <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Ngôn ngữ</p>
-                                        <p class="font-semibold text-slate-900">${mentor.lang || 'vn'}</p>
+                                        <p class="font-semibold text-slate-900">${mentor.lang || 'Chưa cập nhật'}</p>
+                                    </div>
+                                    <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
+                                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Email</p>
+                                        <p class="font-semibold text-slate-900">${mentor.email || 'Chưa cập nhật'}</p>
                                     </div>
                                 </div>
 
@@ -101,7 +105,8 @@
                                         <ul class="space-y-3 text-sm text-slate-900">
                                             <li><span class="font-semibold text-slate-900">MSSV:</span> ${mentor.mssv || 'Chưa cập nhật'}</li>
                                             <li><span class="font-semibold text-slate-900">Khoa:</span> ${mentor.khoa || 'Chưa chọn'}</li>
-                                            <li><span class="font-semibold text-slate-900">Ngôn ngữ:</span> ${mentor.lang || 'vn'}</li>
+                                            <li><span class="font-semibold text-slate-900">Ngôn ngữ:</span> ${mentor.lang || 'Chưa cập nhật'}</li>
+                                            <li><span class="font-semibold text-slate-900">Email:</span> ${mentor.email || 'Chưa cập nhật'}</li>
                                         </ul>
                                     </div>
                                 </div>

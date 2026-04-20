@@ -1,0 +1,12 @@
+name: Local AI
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Qwen Local
+    provider: ollama
+    model: qwen3:8b
+    roles:
+      - chat
+      - edit
+      - apply

@@ -1,0 +1,21 @@
+name: Khanh Setup
+version: 1.0.0
+schema: v1
+
+models:
+  - name: Gemini Pro
+    provider: gemini
+    model: gemini-1.5-pro
+    apiKey: YOUR_API_KEY
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: Gemini Flash
+    provider: gemini
+    model: gemini-1.5-flash
+    apiKey: AIzaSyC0n4YSirTkR9IPaW7yilF5lzZKoH5qTcE
+    roles:
+      - autocomplete
+      - summarize
