@@ -38,6 +38,31 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/class', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/register-class', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/user', (req, res) => {
+    res.sendFile(path.join(__dirname, 'user.html'));
+});
+
+app.get('/manage', (req, res) => {
+    res.sendFile(path.join(__dirname, 'manage.html'));
+});
+
+app.get('/profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'profile.html'));
+});
+
 // Health check để test nhanh server
 app.get('/test', (req, res) => {
     res.status(200).send('Server OK');

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký lớp - MentU</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        input, select, textarea { font-size: 16px; }
+        .slot-check:checked + span {
+            background: #1e3a8a;
+            color: #fff;
+            border-color: #1e3a8a;
+            box-shadow: 0 10px 24px rgba(30, 58, 138, 0.18);
+        }
+        @media (max-width: 640px) {
+            .schedule-grid { min-width: 720px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+    <header class="sticky top-0 z-50 bg-white shadow-sm">
+        <div class="mx-auto flex min-h-20 max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <a href="index.html" class="flex items-center gap-3">
+                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-900 text-white shadow-sm">
+                    <i class="fas fa-graduation-cap text-xl"></i>
+                </span>
+                <span>
+                    <span class="block text-2xl font-black leading-none text-blue-900">MentU</span>
+                    <span class="text-xs text-slate-500">Đăng ký lớp học</span>
+                </span>
+            </a>
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+                <a href="index.html" class="rounded-xl border border-slate-300 px-4 py-2 font-bold text-slate-700 hover:bg-slate-50">Trang chủ</a>
+
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-8">
+        <section class="mb-6 rounded-3xl border border-blue-100 bg-white p-5 shadow-sm md:p-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-sm font-black uppercase tracking-[0.2em] text-blue-900">Route /login</p>
+                    <h1 class="mt-2 text-3xl font-black text-slate-900">Đăng ký lớp học</h1>
+                    <p class="mt-2 max-w-2xl text-slate-600">Bạn chỉ cần nhập thông tin đăng ký. Sau khi gửi, hệ thống sẽ chuyển sang bước quét mã QR.</p>
+                </div>
+                <div class="rounded-2xl bg-blue-50 p-3 text-sm text-blue-900">
+                    <b>Bước 1:</b> Điền thông tin<br>
+                    <b>Bước 2:</b> Quét QR thanh toán
+                </div>
+            </div>
+        </section>
+
+        <div id="messageBox" class="mb-5 hidden rounded-2xl border p-4 text-sm"></div>
+
+        <section id="formStep" class="rounded-3xl bg-white p-5 shadow-md md:p-8">
+            <form id="classForm" class="space-y-6">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <h2 class="text-lg font-black text-slate-900">1. Thông tin cơ bản</h2>
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Họ tên</label>
+                            <input type="text" id="learnerName" required class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: Nguyễn Văn A">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Mã số sinh viên</label>
+                            <input type="text" id="mssv" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: 12345678">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Email liên hệ</label>
+                            <input type="email" id="email" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="you@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Số điện thoại</label>
+                            <input type="tel" id="phone" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: 09xxxxxxxx">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <h2 class="text-lg font-black text-amber-950">2. Mentor muốn học cùng</h2>
+                    <label class="mt-4 block text-sm font-bold text-amber-900">Bạn muốn học với người dùng/mentor nào?</label>
+                    <select id="mentorSelect" class="mt-1 w-full rounded-xl border border-amber-200 bg-white p-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100">
+                        <option value="">Đang tải danh sách mentor...</option>
+                    </select>
+                    <p id="mentorNotice" class="mt-2 text-sm text-amber-800">Bạn có thể để trống nếu muốn MentU tư vấn mentor phù hợp.</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 p-4">
+                    <h2 class="text-lg font-black text-slate-900">3. Nhu cầu học tập</h2>
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Môn / kỹ năng muốn học</label>
+                            <input type="text" id="subject" required class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: IELTS Speaking, HSK 4">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Trình độ hiện tại</label>
+                            <select id="currentLevel" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100">
+                                <option value="">Chọn trình độ</option>
+                                <option value="Mới bắt đầu">Mới bắt đầu</option>
+                                <option value="Cơ bản">Cơ bản</option>
+                                <option value="Trung cấp">Trung cấp</option>
+                                <option value="Nâng cao">Nâng cao</option>
+                                <option value="Cần tư vấn">Cần tư vấn</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-bold text-slate-700">Mục tiêu học tập</label>
+                        <textarea id="goal" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: đạt IELTS 7.0, cải thiện giao tiếp, luyện phỏng vấn..."></textarea>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-bold text-slate-700">Khó khăn đang gặp phải</label>
+                        <input type="text" id="difficulty" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: phát âm chưa rõ, thiếu từ vựng, sợ giao tiếp...">
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 p-4">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 class="text-lg font-black text-slate-900">4. Lịch rảnh có thể học</h2>
+                            <p class="mt-1 text-sm text-slate-500">Chọn các khung giờ phù hợp. Trên điện thoại có thể kéo ngang bảng.</p>
+                        </div>
+                        <button type="button" onclick="clearSchedule('learnerSchedule')" class="self-start rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 md:self-auto">Xóa chọn</button>
+                    </div>
+                    <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+                        <div id="learnerSchedule" class="schedule-grid grid grid-cols-[110px_repeat(7,minmax(82px,1fr))] bg-white text-center text-sm"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Hình thức học mong muốn</label>
+                        <select id="classFormat" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100">
+                            <option value="">Chưa chọn</option>
+                            <option value="Online">Online</option>
+                            <option value="Offline">Offline</option>
+                            <option value="Online hoặc Offline đều được">Online hoặc Offline đều được</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Ghi chú thêm</label>
+                        <input type="text" id="note" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="Yêu cầu riêng, mong muốn về cách học...">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitButton" class="w-full rounded-xl bg-blue-900 py-3 font-black text-white shadow-lg transition hover:bg-blue-800">
+                    Gửi thông tin và sang bước quét QR
+                </button>
+            </form>
+        </section>
+
+        <section id="qrStep" class="hidden rounded-3xl bg-white p-5 text-center shadow-md md:p-8">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-green-700">
+                <i class="fas fa-check-circle text-3xl"></i>
+            </div>
+            <h2 class="mt-4 text-3xl font-black text-slate-900">Đã lưu thông tin đăng ký</h2>
+            <p id="qrMentorText" class="mt-2 text-slate-600"></p>
+
+            <div id="qrBox" class="mx-auto mt-6 max-w-md rounded-3xl border border-slate-200 bg-slate-50 p-5">
+    
+                <img 
+                    src="qr_code/2b6f63c4-182c-42c2-8a86-8153502ab1fa.jpg" 
+                    alt="Mã QR thanh toán MentU"
+                    class="mx-auto max-h-[360px] w-full max-w-[320px] rounded-2xl border border-slate-200 bg-white object-contain p-2 shadow-sm"
+                >
+
+                <p class="mt-4 text-sm text-slate-500">
+                    Sau khi chuyển khoản, bạn có thể chụp màn hình giao dịch để đối chiếu khi MentU liên hệ.
+                </p>
+            </div>
+
+            <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                <a href="index.html" class="rounded-xl border border-blue-900 px-5 py-3 font-bold text-blue-900 hover:bg-blue-50">Về trang chủ</a>
+                <button type="button" onclick="resetFlow()" class="rounded-xl bg-blue-900 px-5 py-3 font-bold text-white hover:bg-blue-800">Đăng ký lớp khác</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAGk1ElxXExiYyrzQzQ_wqLobafBs__muk",
+            authDomain: "mentor-web-add47.firebaseapp.com",
+            databaseURL: "https://mentor-web-add47-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mentor-web-add47",
+            storageBucket: "mentor-web-add47.firebasestorage.app",
+            messagingSenderId: "595535263471",
+            appId: "1:595535263471:web:0d703f288f552421254d1a",
+            measurementId: "G-90SRNQD7GD"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const params = new URLSearchParams(window.location.search);
+        const preselectedMentorId = params.get('mentorId') || params.get('mentor') || '';
+        const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+        const dayLabels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+        const timeSlots = ['8h-10h', '10h-12h', '14h-16h', '17h-19h', '19h-21h'];
+        const fixedQrCandidates = [
+            'qr_code.png',
+            'qr_code.jpg',
+            'qr_code.jpeg',
+            'qr_code/qr_code.png',
+            'qr_code/qr_code.jpg',
+            'qr_code/qr.png',
+            'qr_code/qr.jpg',
+            'qr_code'
+        ];
+        let allMentors = [];
+        let busy = false;
+        const authReady = auth.signInAnonymously().catch(error => {
+            console.error('Firebase auth error:', error);
+            showMessage('Không thể kết nối Firebase. Vui lòng thử lại sau.', 'error');
+            throw error;
+        });
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function showMessage(text, type = 'info') {
+            const box = document.getElementById('messageBox');
+            const styles = {
+                success: 'border-green-200 bg-green-50 text-green-800',
+                error: 'border-red-200 bg-red-50 text-red-800',
+                info: 'border-blue-200 bg-blue-50 text-blue-800'
+            };
+            box.className = `mb-5 rounded-2xl border p-4 text-sm ${styles[type] || styles.info}`;
+            box.textContent = text;
+            box.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            document.getElementById('messageBox').classList.add('hidden');
+        }
+
+        function getValue(id) {
+            return document.getElementById(id).value.trim();
+        }
+
+        function setLoading(loading) {
+            busy = loading;
+            const button = document.getElementById('submitButton');
+            button.disabled = loading;
+            button.textContent = loading ? 'Đang lưu thông tin...' : 'Gửi thông tin và sang bước quét QR';
+            button.classList.toggle('opacity-70', loading);
+        }
+
+        function renderSchedule(containerId) {
+            const container = document.getElementById(containerId);
+            const cells = [];
+            cells.push('<div class="sticky left-0 z-10 border-b border-r border-slate-200 bg-blue-900 p-3 font-black text-white">Khung giờ</div>');
+            days.forEach((day, index) => {
+                cells.push(`<div class="border-b border-slate-200 bg-blue-900 p-3 font-black text-white">${day}<span class="block text-[11px] font-medium text-blue-100">${dayLabels[index]}</span></div>`);
+            });
+            timeSlots.forEach(slot => {
+                cells.push(`<div class="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 p-3 text-left font-bold text-slate-700">${slot}</div>`);
+                days.forEach(day => {
+                    const value = `${day} ${slot}`;
+                    cells.push(`
+                        <label class="flex items-center justify-center border-b border-slate-100 p-2">
+                            <input type="checkbox" class="slot-check sr-only" name="${containerId}" value="${escapeHtml(value)}">
+                            <span class="block w-full cursor-pointer rounded-xl border border-slate-200 px-7 py-7 text-xs font-bold text-slate-600 transition hover:border-blue-300 hover:bg-blue-50"></span>
+                        </label>
+                    `);
+                });
+            });
+            container.innerHTML = cells.join('');
+        }
+
+        function getSchedule(containerId) {
+            return Array.from(document.querySelectorAll(`input[name="${containerId}"]:checked`)).map(input => input.value);
+        }
+
+        function clearSchedule(containerId) {
+            document.querySelectorAll(`input[name="${containerId}"]`).forEach(input => input.checked = false);
+        }
+
+        function selectedMentor() {
+            const id = document.getElementById('mentorSelect').value;
+            return allMentors.find(item => String(item.id) === String(id)) || null;
+        }
+
+        function updateMentorNotice() {
+            const mentor = selectedMentor();
+            const notice = document.getElementById('mentorNotice');
+            if (mentor) {
+                notice.innerHTML = `Muốn học với: <b>${escapeHtml(mentor.name || 'Mentor')}</b>${mentor.email ? ` · ${escapeHtml(mentor.email)}` : ''}<br><span class="text-xs">Sau khi gửi thông tin, học viên sẽ thấy mã QR. </span>`;
+            } else {
+                notice.textContent = 'Bạn chưa chọn mentor cụ thể. MentU sẽ xem yêu cầu và tư vấn người phù hợp. QR thanh toán vẫn dùng mã cố định.';
+            }
+        }
+
+        function renderMentorOptions() {
+            const select = document.getElementById('mentorSelect');
+            const options = ['<option value="">Cần MentU tư vấn mentor phù hợp</option>'];
+            options.push(...allMentors.map(mentor => {
+                const selected = String(mentor.id) === String(preselectedMentorId) ? 'selected' : '';
+                const label = `${mentor.name || 'Mentor'}${mentor.lang ? ` - ${mentor.lang}` : ''}${mentor.khoa ? ` - ${mentor.khoa}` : ''}`;
+                return `<option value="${escapeHtml(mentor.id)}" ${selected}>${escapeHtml(label)}</option>`;
+            }));
+            select.innerHTML = options.join('');
+            updateMentorNotice();
+        }
+
+        function loadMentors() {
+            db.ref('mentors').once('value')
+                .then(snapshot => {
+                    const data = snapshot.val() || {};
+                    allMentors = Object.values(data).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'vi'));
+                    renderMentorOptions();
+                })
+                .catch(error => {
+                    console.error('Không tải được mentor:', error);
+                    document.getElementById('mentorSelect').innerHTML = '<option value="">Không tải được danh sách mentor, cần MentU tư vấn</option>';
+                    updateMentorNotice();
+                });
+        }
+
+        function showQrStep(mentor, registrationId) {
+            const mentorText = mentor
+                ? `Bạn đã chọn học với ${mentor.name || 'mentor'}. Mã đăng ký: ${registrationId}`
+                : `Bạn chưa chọn mentor cụ thể. Mã đăng ký: ${registrationId}`;
+            document.getElementById('qrMentorText').textContent = `${mentorText}. Vui lòng quét mã QR thanh toán cố định bên dưới.`;     
+
+            document.getElementById('formStep').classList.add('hidden');
+            document.getElementById('qrStep').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetFlow() {
+            document.getElementById('classForm').reset();
+            clearSchedule('learnerSchedule');
+            document.getElementById('qrStep').classList.add('hidden');
+            document.getElementById('formStep').classList.remove('hidden');
+            updateMentorNotice();
+            hideMessage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('mentorSelect').addEventListener('change', updateMentorNotice);
+
+        document.getElementById('classForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            if (busy) return;
+            if (!event.target.reportValidity()) return;
+
+            const learnerName = getValue('learnerName');
+            const subject = getValue('subject');
+            if (!learnerName || !subject) {
+                showMessage('Vui lòng nhập họ tên và môn/kỹ năng muốn học.', 'error');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const mentor = selectedMentor();
+                const now = new Date().toISOString();
+                const registrationId = Date.now().toString();
+                const scheduleSlots = getSchedule('learnerSchedule');
+                const registration = {
+                    id: registrationId,
+                    type: 'class-registration',
+                    learnerName,
+                    email: getValue('email'),
+                    phone: getValue('phone'),
+                    mssv: getValue('mssv'),
+                    mentorId: mentor ? String(mentor.id) : '',
+                    mentorName: mentor ? (mentor.name || 'Mentor') : 'Cần MentU tư vấn',
+                    mentorEmail: mentor ? (mentor.email || '') : '',
+                    subject,
+                    currentLevel: getValue('currentLevel'),
+                    goal: getValue('goal'),
+                    difficulty: getValue('difficulty'),
+                    scheduleSlots,
+                    preferredSchedule: scheduleSlots.join(', '),
+                    classFormat: getValue('classFormat'),
+                    note: getValue('note'),
+                    status: 'new',
+                    paymentStatus: 'waiting_for_transfer',
+                    source: 'login.html',
+                    createdAt: now,
+                    updatedAt: now
+                };
+
+                await authReady;
+                await db.ref(`classRegistrations/${registrationId}`).set(registration);
+
+                showMessage('Đã lưu thông tin. Vui lòng quét mã QR ở bước tiếp theo.', 'success');
+                showQrStep(mentor, registrationId);
+            } catch (error) {
+                console.error('Lỗi lưu đăng ký lớp:', error);
+                const detail = error && error.message ? ' Chi tiết: ' + error.message : '';
+                showMessage('Có lỗi khi lưu thông tin. Vui lòng thử lại.' + detail, 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        renderSchedule('learnerSchedule');
+        loadMentors();
+    </script>
+</body>
+</html>

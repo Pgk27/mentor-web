@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mentor Profile - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -9,20 +10,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-50">
-    <header class="bg-white shadow-sm h-20 flex items-center justify-between px-8 sticky top-0 z-50">
+<body class="bg-slate-100">
+    <header class="bg-white shadow-sm h-20 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 border-b border-slate-200">
         <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='index.html'">
-            <div class="w-10 h-10 bg-[#1e3a8a] flex items-center justify-center rounded">
+            <div class="w-10 h-10 bg-[#1e3a8a] flex items-center justify-center rounded-xl">
                 <i class="fas fa-graduation-cap text-white text-xl"></i>
             </div>
-            <h1 class="text-2xl font-bold text-[#1e3a8a]">MentU</h1>
+            <h1 class="text-2xl font-black text-[#1e3a8a]">MentU</h1>
         </div>
-        <button onclick="history.back()" class="text-[#1e3a8a] font-bold text-sm">← QUAY LẠI</button>
+        <div class="flex items-center gap-3">
+            <span id="authStatus" class="hidden sm:inline text-xs font-semibold text-slate-500"></span>
+            <a id="loginLink" href="login.html" class="rounded-xl bg-[#d4af37] px-4 py-2 text-sm font-bold text-white hover:brightness-95">Đăng nhập</a>
+            <button onclick="history.back()" class="text-[#1e3a8a] font-bold text-sm">← QUAY LẠI</button>
+        </div>
     </header>
 
-    <main class="max-w-4xl mx-auto py-12 px-4">
-        <div id="profile-content" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
-            <p class="p-20 text-center text-gray-400 italic">Đang tải hồ sơ từ database...</p>
+    <main class="max-w-5xl mx-auto py-10 px-4">
+        <div id="profile-content" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+            <p class="p-20 text-center text-slate-400 italic">Đang tải hồ sơ từ database...</p>
         </div>
     </main>
 
@@ -40,96 +45,192 @@
 
         firebase.initializeApp(firebaseConfig);
 
-        firebase.auth().signInAnonymously().catch(err => {
-            console.error('Firebase auth error:', err);
-            document.getElementById('profile-content').innerHTML = `<p class="p-20 text-center text-red-500">Không thể kết nối Firebase.</p>`;
-        });
+        const auth = firebase.auth();
+        const db = firebase.database();
+        let currentUser = null;
+        let currentMentor = null;
+        let profileLoaded = false;
+
+        function escapeHtml(text = '') {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getMentorId() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        function getSafeAvatar(mentor) {
+            if (mentor.avatar && String(mentor.avatar).trim()) return mentor.avatar;
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name || 'Mentor')}&background=1e3a8a&color=ffffff`;
+        }
+
+        function updateAuthStatus(user) {
+            const loginLink = document.getElementById('loginLink');
+            const authStatus = document.getElementById('authStatus');
+            const mentorId = getMentorId();
+            const target = `profile.html?id=${encodeURIComponent(mentorId || '')}`;
+
+            if (loginLink) loginLink.href = `login.html?redirect=${encodeURIComponent(target)}`;
+
+            if (user && !user.isAnonymous) {
+                loginLink.classList.add('hidden');
+                authStatus.classList.remove('hidden');
+                authStatus.textContent = user.email || user.displayName || 'Đã đăng nhập';
+            } else {
+                loginLink.classList.remove('hidden');
+                authStatus.classList.add('hidden');
+                authStatus.textContent = '';
+            }
+        }
+
+        function renderProfile(mentor) {
+            const skills = Array.isArray(mentor.skills) && mentor.skills.length ? mentor.skills : ['Chưa có kỹ năng'];
+            const safeAvatar = getSafeAvatar(mentor);
+            const mentorName = mentor.name || 'mentor này';
+
+            document.getElementById('profile-content').innerHTML = `
+                <div class="relative overflow-hidden rounded-[32px] bg-white">
+                    <div class="h-56 bg-gradient-to-r from-slate-950 via-blue-950 to-sky-700"></div>
+                    <div class="px-6 md:px-8 pb-10 -mt-28 relative">
+                        <div class="flex flex-col lg:flex-row items-center gap-8">
+                            <div class="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white bg-white shadow-xl">
+                                <img src="${safeAvatar}" alt="${escapeHtml(mentorName)}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-center lg:text-left max-w-2xl">
+                                <span class="inline-block rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-[0.35em] text-slate-100 shadow-sm backdrop-blur-sm">Mentor</span>
+                                <h1 class="mt-4 text-4xl md:text-5xl font-extrabold text-white tracking-tight">${escapeHtml(mentorName)}</h1>
+                                <p class="mt-3 text-lg text-slate-100">${escapeHtml(mentor.role || 'Mentor')}${mentor.khoa ? ` @ ${escapeHtml(mentor.khoa)}` : ''}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 rounded-[28px] border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <p class="text-sm font-black text-amber-900"><i class="fas fa-bell mr-2"></i>Bạn muốn học với ${escapeHtml(mentorName)}?</p>
+                                    <p class="mt-1 text-sm text-amber-800">Bấm nút bên cạnh để mở form đăng ký lớp và trả lời bộ câu hỏi dành cho người học.</p>
+                                </div>
+                                <button onclick="requestStudyWithCurrentMentor()" class="rounded-xl bg-[#d4af37] px-5 py-3 text-sm font-black text-white hover:brightness-95 transition">
+                                    Tôi muốn học với mentor này
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm text-slate-900">
+                            <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">MSSV</p>
+                                <p class="font-semibold text-slate-900">${escapeHtml(mentor.mssv || 'Chưa cập nhật')}</p>
+                            </div>
+                            <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Khoa</p>
+                                <p class="font-semibold text-slate-900">${escapeHtml(mentor.khoa || 'Chưa chọn')}</p>
+                            </div>
+                            <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Ngôn ngữ</p>
+                                <p class="font-semibold text-slate-900">${escapeHtml(mentor.lang || 'Chưa cập nhật')}</p>
+                            </div>
+                            <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
+                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Email</p>
+                                <p class="font-semibold text-slate-900 break-all">${escapeHtml(mentor.email || 'Chưa cập nhật')}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-10 grid gap-6 lg:grid-cols-2">
+                            <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Kỹ năng</h2>
+                                <div class="flex flex-wrap gap-3">
+                                    ${skills.map(skill => `<span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-900">${escapeHtml(skill)}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Thông tin thêm</h2>
+                                <ul class="space-y-3 text-sm text-slate-900">
+                                    <li><span class="font-semibold text-slate-900">MSSV:</span> ${escapeHtml(mentor.mssv || 'Chưa cập nhật')}</li>
+                                    <li><span class="font-semibold text-slate-900">Khoa:</span> ${escapeHtml(mentor.khoa || 'Chưa chọn')}</li>
+                                    <li><span class="font-semibold text-slate-900">Ngôn ngữ:</span> ${escapeHtml(mentor.lang || 'Chưa cập nhật')}</li>
+                                    <li><span class="font-semibold text-slate-900">Email:</span> ${mentor.email ? `<a class="text-blue-700 hover:underline" href="mailto:${escapeHtml(mentor.email)}">${escapeHtml(mentor.email)}</a>` : 'Chưa cập nhật'}</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                            <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Minh chứng chứng chỉ</h2>
+                            <div class="flex justify-center">
+                                ${mentor.certificate ? `<img src="${mentor.certificate}" class="max-w-lg w-full h-auto object-contain rounded-3xl border border-slate-200">` : `<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Chưa có ảnh chứng chỉ</div>`}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
         function fetchProfile() {
-            const params = new URLSearchParams(window.location.search);
-            const mentorId = params.get('id'); // Lấy ID từ thanh địa chỉ
-
+            const mentorId = getMentorId();
             if (!mentorId) {
                 document.getElementById('profile-content').innerHTML = `<p class="p-20 text-center text-red-500">ID mentor không hợp lệ.</p>`;
                 return;
             }
 
-            const mentorRef = firebase.database().ref(`mentors/${mentorId}`);
-            mentorRef.get().then(snapshot => {
-                const mentor = snapshot.exists() ? snapshot.val() : null;
-
-                if (mentor) {
-                    document.getElementById('profile-content').innerHTML = `
-                        <div class="relative overflow-hidden rounded-[32px] shadow-2xl border border-slate-200 bg-white">
-                            <div class="h-52 bg-gradient-to-r from-slate-950 via-blue-950 to-sky-700"></div>
-                            <div class="px-8 pb-10 -mt-28 relative">
-                                <div class="flex flex-col lg:flex-row items-center gap-8">
-                                    <div class="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white bg-white shadow-xl">
-                                        <img src="${mentor.avatar}" alt="${mentor.name}" class="w-full h-full object-cover">
-                                    </div>
-                                    <div class="text-center lg:text-left max-w-2xl">
-                                        <span class="inline-block rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-[0.35em] text-slate-100 shadow-sm backdrop-blur-sm">Mentor</span>
-                                        <h1 class="mt-4 text-5xl font-extrabold text-white tracking-tight">${mentor.name}</h1>
-                                        <p class="mt-3 text-lg text-black">${mentor.role}${mentor.khoa ? ` @ ${mentor.khoa}` : ''}</p>
-                                    </div>
-                                </div>
-
-                                <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm text-slate-900">
-                                    <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
-                                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">MSSV</p>
-                                        <p class="font-semibold text-slate-900">${mentor.mssv || 'Chưa cập nhật'}</p>
-                                    </div>
-                                    <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
-                                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Khoa</p>
-                                        <p class="font-semibold text-slate-900">${mentor.khoa || 'Chưa chọn'}</p>
-                                    </div>
-                                    <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
-                                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Ngôn ngữ</p>
-                                        <p class="font-semibold text-slate-900">${mentor.lang || 'Chưa cập nhật'}</p>
-                                    </div>
-                                    <div class="rounded-[24px] bg-white p-4 shadow-sm border border-slate-200">
-                                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Email</p>
-                                        <p class="font-semibold text-slate-900">${mentor.email || 'Chưa cập nhật'}</p>
-                                    </div>
-                                </div>
-
-                                <div class="mt-10 grid gap-6 lg:grid-cols-2">
-                                    <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                                        <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Kỹ năng</h2>
-                                        <div class="flex flex-wrap gap-3">
-                                            ${(mentor.skills && mentor.skills.length ? mentor.skills : ['Chưa có kỹ năng']).map(s => `<span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-900">${s}</span>`).join('')}
-                                        </div>
-                                    </div>
-                                    <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                                        <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Thông tin thêm</h2>
-                                        <ul class="space-y-3 text-sm text-slate-900">
-                                            <li><span class="font-semibold text-slate-900">MSSV:</span> ${mentor.mssv || 'Chưa cập nhật'}</li>
-                                            <li><span class="font-semibold text-slate-900">Khoa:</span> ${mentor.khoa || 'Chưa chọn'}</li>
-                                            <li><span class="font-semibold text-slate-900">Ngôn ngữ:</span> ${mentor.lang || 'Chưa cập nhật'}</li>
-                                            <li><span class="font-semibold text-slate-900">Email:</span> ${mentor.email || 'Chưa cập nhật'}</li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class="mt-10 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                                    <h2 class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 mb-4">Minh chứng chứng chỉ</h2>
-                                    <div class="flex justify-center">
-                                        ${mentor.certificate ? `<img src="${mentor.certificate}" class="max-w-lg h-auto object-contain rounded-3xl border border-slate-200">` : `<div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Chưa có ảnh chứng chỉ</div>`}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
+            db.ref(`mentors/${mentorId}`).get().then(snapshot => {
+                currentMentor = snapshot.exists() ? snapshot.val() : null;
+                if (!currentMentor) {
                     document.getElementById('profile-content').innerHTML = `<p class="p-20 text-center text-red-500">Hồ sơ không tồn tại hoặc đã bị xóa.</p>`;
+                    return;
                 }
-            }).catch(err => {
-                console.error('Lỗi Firebase:', err);
+                renderProfile(currentMentor);
+            }).catch(error => {
+                console.error('Lỗi Firebase:', error);
                 document.getElementById('profile-content').innerHTML = `<p class="p-20 text-center text-red-500">Lỗi tải dữ liệu từ Firebase!</p>`;
             });
         }
 
-        window.onload = fetchProfile;
+        function requestStudyWithCurrentMentor() {
+            if (!currentMentor) return;
+            const mentorId = currentMentor.id || getMentorId();
+            const target = `profile.html?id=${encodeURIComponent(mentorId)}`;
+            const loginParams = new URLSearchParams({
+                mentorId: String(mentorId),
+                redirect: target
+            });
+            window.location.href = `login.html?${loginParams.toString()}`;
+        }
+
+        function initProfilePage() {
+            auth.onAuthStateChanged(user => {
+                currentUser = user;
+                updateAuthStatus(user);
+
+                if (!user) {
+                    auth.signInAnonymously()
+                        .then(() => {
+                            if (!profileLoaded) {
+                                profileLoaded = true;
+                                fetchProfile();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Firebase auth error:', error);
+                            if (!profileLoaded) {
+                                profileLoaded = true;
+                                fetchProfile();
+                            }
+                        });
+                    return;
+                }
+
+                if (!profileLoaded) {
+                    profileLoaded = true;
+                    fetchProfile();
+                }
+            });
+        }
+
+        window.onload = initProfilePage;
     </script>
 </body>
 </html>

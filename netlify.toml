@@ -4,3 +4,33 @@
 
 [dev]
   framework = "static"
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/class"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/register-class"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/user"
+  to = "/user.html"
+  status = 200
+
+[[redirects]]
+  from = "/manage"
+  to = "/manage.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to = "/profile.html"
+  status = 200

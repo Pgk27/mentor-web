@@ -3,68 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Mentor - MentU</title>
+    <title>Quản lý - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        input, select, textarea, button { font-size: 16px; }
+        .scroll-safe { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        @media (max-width: 768px) {
+            header .h-20 { height: auto; min-height: 5rem; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen text-slate-800">
     <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 py-4 min-h-20 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-900 rounded flex items-center justify-center text-white font-bold">
-                    M
-                </div>
+                <div class="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center text-white font-bold">M</div>
                 <div>
                     <h1 class="text-2xl font-bold text-blue-900">MentU</h1>
-                    <p class="text-xs text-gray-500">Trang quản lý mentor</p>
+                    <p class="text-xs text-gray-500">Trang quản lý - không cần mật khẩu admin</p>
                 </div>
             </div>
-
-            <div class="flex gap-3">
-                <a href="user.html" class="bg-blue-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition">
-                    Thêm mentor
-                </a>
-                <a href="index.html" class="border border-blue-900 text-blue-900 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition">
-                    Về trang chủ
-                </a>
+            <div class="flex flex-wrap gap-2 md:justify-end">
+                <a href="user.html" class="bg-blue-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition">Thêm mentor</a>
+                <a href="login.html" class="bg-[#d4af37] text-white px-4 py-2 rounded-lg font-semibold hover:brightness-95 transition">Form đăng ký lớp</a>
+                <a href="index.html" class="border border-blue-900 text-blue-900 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition">Về trang chủ</a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <section id="connectionStatus" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
+            <i class="fas fa-circle-notch fa-spin mr-2 text-blue-900"></i>Đang kết nối Firebase...
+        </section>
+
+        <section class="bg-white rounded-3xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900">Quản lý hệ thống</h2>
+                    <p class="text-sm text-gray-500 mt-1">Tự phân loại dữ liệu theo nguồn: <b>login.html</b> vào học viên đăng ký lớp, <b>user.html</b> vào mentor.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="searchInput" placeholder="Tìm tên, email, môn học, mentor..." class="w-full sm:w-96 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:border-blue-900">
+                    <button onclick="reloadAll()" class="bg-blue-900 text-white px-4 py-3 rounded-xl font-bold hover:bg-blue-800 transition">Tải lại</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-xs font-bold text-gray-400 uppercase">Mentor từ user.html</p><p id="mentorStat" class="text-3xl font-black text-blue-900 mt-1">0</p></div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-xs font-bold text-gray-400 uppercase">Học viên từ login.html</p><p id="registrationStat" class="text-3xl font-black text-blue-900 mt-1">0</p></div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm"><p class="text-xs font-bold text-gray-400 uppercase">Chờ xử lý</p><p id="pendingStat" class="text-3xl font-black text-blue-900 mt-1">0</p></div>
+        </section>
+
+        <section class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+            <p class="font-bold"><i class="fas fa-bell mr-2"></i>Quy tắc phân loại</p>
+            <p class="text-sm mt-1">Dữ liệu có <b>source: login.html</b> hoặc nằm trong <b>classRegistrations</b> sẽ hiện ở tab học viên. Dữ liệu có <b>source: user.html</b> hoặc nằm trong <b>mentors</b> sẽ hiện ở tab mentor.</p>
+        </section>
+
+        <div class="mb-6 flex flex-wrap gap-3">
+            <button id="tabRegistrations" onclick="showTab('registrations')" class="bg-blue-900 text-white px-5 py-3 rounded-xl font-bold">Học viên đăng ký lớp</button>
+            <button id="tabMentors" onclick="showTab('mentors')" class="bg-white border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-bold hover:bg-gray-50">Mentor</button>
+        </div>
+
+        <section id="registrationsPanel">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Danh sách học viên đăng ký lớp</h2>
+                    <p class="text-sm text-gray-500">Chỉ hiện người lấy nguồn từ <b>login.html</b>.</p>
+                </div>
+                <span id="registrationCount" class="text-sm text-gray-500">Đang tải...</span>
+            </div>
+            <div id="registrationList" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </section>
+
+        <section id="mentorsPanel" class="hidden">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">Danh sách mentor</h2>
-                    <p class="text-sm text-gray-500 mt-1">Bạn có thể xóa những mentor không phù hợp khỏi hệ thống.</p>
+                    <p class="text-sm text-gray-500">Chỉ hiện người lấy nguồn từ <b>user.html</b>.</p>
                 </div>
-
-                <div class="flex gap-3">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Tìm theo tên, chức vụ, công ty..."
-                        class="w-full md:w-80 border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-blue-900"
-                    >
-                    <button
-                        onclick="loadMentors()"
-                        class="bg-blue-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-800 transition"
-                    >
-                        Tải lại
-                    </button>
-                </div>
+                <span id="mentorCount" class="text-sm text-gray-500">Đang tải...</span>
             </div>
-        </div>
-
-        <div id="mentorCount" class="text-sm text-gray-600 mb-4">Đang tải dữ liệu...</div>
-
-        <div id="mentorList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
-                Đang tải mentor...
-            </div>
-        </div>
+            <div id="mentorList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+        </section>
     </main>
 
     <script>
@@ -80,142 +106,349 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-
-        firebase.auth().signInAnonymously().catch(err => {
-            console.error('Firebase auth error:', err);
-            alert('Không thể kết nối Firebase. Vui lòng thử lại sau.');
-        });
-
         const db = firebase.database();
         let allMentors = [];
+        let allRegistrations = [];
+        let allUsers = [];
+        let activeTab = 'registrations';
 
-        function loadMentors() {
-            const list = document.getElementById('mentorList');
-            const count = document.getElementById('mentorCount');
-
-            list.innerHTML = `
-                <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
-                    Đang tải mentor...
-                </div>
-            `;
-            count.innerText = 'Đang tải dữ liệu...';
-
-            const mentorsRef = db.ref('mentors');
-            mentorsRef.off('value');
-            mentorsRef.on('value', snapshot => {
-                const data = snapshot.val() || {};
-                allMentors = Object.values(data).sort((a, b) => Number(b.id) - Number(a.id));
-                renderMentors();
-            }, error => {
-                console.error(error);
-                count.innerText = 'Không thể tải dữ liệu';
-                list.innerHTML = `
-                    <div class="col-span-full bg-red-50 text-red-600 rounded-2xl p-6 border border-red-200">
-                        Lỗi tải dữ liệu từ Firebase.
-                    </div>
-                `;
+        const authReady = firebase.auth().signInAnonymously()
+            .then(() => {
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-check-circle mr-2 text-green-700"></i>Đã kết nối Firebase. Dữ liệu sẽ được phân loại theo source.';
+            })
+            .catch(err => {
+                console.error('Firebase auth error:', err);
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-exclamation-triangle mr-2 text-red-700"></i>Không thể đăng nhập ẩn danh Firebase. Hãy bật Authentication → Anonymous.';
+                throw err;
             });
+
+        function escapeHtml(text = '') {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function normalize(text = '') {
+            return String(text).trim().toLowerCase();
+        }
+
+        function formatDate(value) {
+            if (!value) return 'Chưa có';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            return date.toLocaleString('vi-VN');
+        }
+
+        function statusLabel(status) {
+            const labels = { new: 'Mới', accepted: 'Đã nhận', done: 'Hoàn tất', cancelled: 'Đã hủy' };
+            return labels[status] || status || 'Mới';
+        }
+
+        function statusClass(status) {
+            if (status === 'accepted') return 'bg-blue-50 text-blue-800 border-blue-100';
+            if (status === 'done') return 'bg-green-50 text-green-800 border-green-100';
+            if (status === 'cancelled') return 'bg-red-50 text-red-800 border-red-100';
+            return 'bg-amber-50 text-amber-800 border-amber-100';
+        }
+
+        function getObjectItems(data, pathName, defaultSource = '') {
+            return Object.entries(data || {}).map(([key, value]) => ({
+                ...(value || {}),
+                id: value && value.id ? value.id : key,
+                _key: key,
+                _path: pathName,
+                source: value && value.source ? value.source : defaultSource
+            }));
+        }
+
+        function isLoginSource(item) {
+            return item._path === 'classRegistrations'
+                || item.source === 'login.html'
+                || item.type === 'class-registration'
+                || item.role === 'learner'
+                || Boolean(item.latestRegistrationId || item.learnerName || item.desiredMentorName || item.mentorName);
+        }
+
+        function isUserSource(item) {
+            return item._path === 'mentors'
+                || item.source === 'user.html'
+                || item.role === 'mentor'
+        }
+
+        function getSafeAvatar(mentor) {
+            if (mentor.avatar && String(mentor.avatar).trim()) return mentor.avatar;
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name || 'Mentor')}&background=1e3a8a&color=ffffff`;
+        }
+
+        function sourceBadge(item) {
+            const source = item.source || (item._path === 'classRegistrations' ? 'login.html' : item._path === 'mentors' ? 'user.html' : 'unknown');
+            return `<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">Nguồn: ${escapeHtml(source)}</span>`;
+        }
+
+        function registrationName(item) {
+            return item.learnerName || item.name || 'Chưa có tên';
+        }
+
+        function registrationMentorName(item) {
+            return item.mentorName || item.desiredMentorName || 'Cần MentU tư vấn';
+        }
+
+        function registrationSubject(item) {
+            return item.subject || item.learningSubject || item.classSubject || 'Chưa có';
+        }
+
+        function registrationLevel(item) {
+            return item.currentLevel || item.level || 'Chưa chọn';
+        }
+
+        function registrationSchedule(item) {
+            if (Array.isArray(item.scheduleSlots) && item.scheduleSlots.length) return item.scheduleSlots.join(', ');
+            return item.preferredSchedule || item.availableTime || 'Chưa có';
+        }
+
+        function mentorSchedule(mentor) {
+            if (Array.isArray(mentor.scheduleSlots) && mentor.scheduleSlots.length) return mentor.scheduleSlots.join(', ');
+            return mentor.availableSchedule || 'Chưa có';
+        }
+
+        function showTab(tab) {
+            activeTab = tab;
+            document.getElementById('registrationsPanel').classList.toggle('hidden', tab !== 'registrations');
+            document.getElementById('mentorsPanel').classList.toggle('hidden', tab !== 'mentors');
+            document.getElementById('tabRegistrations').className = tab === 'registrations'
+                ? 'bg-blue-900 text-white px-5 py-3 rounded-xl font-bold'
+                : 'bg-white border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-bold hover:bg-gray-50';
+            document.getElementById('tabMentors').className = tab === 'mentors'
+                ? 'bg-blue-900 text-white px-5 py-3 rounded-xl font-bold'
+                : 'bg-white border border-gray-300 text-gray-700 px-5 py-3 rounded-xl font-bold hover:bg-gray-50';
+        }
+
+        function matchesSearch(text) {
+            const keyword = normalize(document.getElementById('searchInput').value);
+            return !keyword || normalize(text).includes(keyword);
+        }
+
+        function uniqueById(items) {
+            const map = new Map();
+            items.forEach(item => {
+                const key = String(item.id || item._key);
+                map.set(key, item);
+            });
+            return Array.from(map.values());
+        }
+
+        async function loadUsers() {
+            try {
+                const snapshot = await db.ref('users').get();
+                allUsers = getObjectItems(snapshot.val() || {}, 'users');
+            } catch (error) {
+                console.warn('Không đọc được users, sẽ bỏ qua bảng users:', error);
+                allUsers = [];
+            }
+        }
+
+        async function loadMentors() {
+            const snapshot = await db.ref('mentors').get();
+            const fromMentors = getObjectItems(snapshot.val() || {}, 'mentors', 'user.html').filter(isUserSource);
+            const fromUsers = allUsers.filter(item => isUserSource(item) && !isLoginSource(item));
+            allMentors = uniqueById([...fromMentors, ...fromUsers]).sort((a, b) => String(b.createdAt || b.id || '').localeCompare(String(a.createdAt || a.id || '')));
+        }
+
+        async function loadRegistrations() {
+            const snapshot = await db.ref('classRegistrations').get();
+            const fromRegistrations = getObjectItems(snapshot.val() || {}, 'classRegistrations', 'login.html').filter(isLoginSource);
+            const fromUsers = allUsers.filter(isLoginSource);
+            const map = new Map();
+            fromUsers.forEach(item => map.set(String(item.latestRegistrationId || item.id || item._key), item));
+            fromRegistrations.forEach(item => map.set(String(item.id || item._key), item));
+            allRegistrations = Array.from(map.values()).sort((a, b) => String(b.createdAt || b.id || '').localeCompare(String(a.createdAt || a.id || '')));
+        }
+
+        function renderStats() {
+            document.getElementById('mentorStat').textContent = allMentors.length;
+            document.getElementById('registrationStat').textContent = allRegistrations.length;
+            document.getElementById('pendingStat').textContent = allRegistrations.filter(item => !item.status || item.status === 'new').length;
+        }
+
+        function renderRegistrations() {
+            const list = document.getElementById('registrationList');
+            const count = document.getElementById('registrationCount');
+            const filtered = allRegistrations.filter(item => matchesSearch([
+                registrationName(item), item.email, item.phone, item.mssv, item.khoa, registrationSubject(item), registrationLevel(item),
+                item.learningTopics, item.difficulty, registrationSchedule(item), item.goal, item.note, registrationMentorName(item), item.source
+            ].join(' ')));
+
+            count.textContent = `Tổng ${filtered.length} đăng ký`;
+            if (!filtered.length) {
+                list.innerHTML = '<div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">Chưa có học viên đăng ký lớp từ login.html.</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(item => `
+                <article class="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 shadow-sm">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">${escapeHtml(registrationName(item))}</h3>
+                            <p class="text-sm text-gray-500 mt-1">${escapeHtml(item.email || 'Chưa có email')} ${item.phone ? '· ' + escapeHtml(item.phone) : ''}</p>
+                            <div class="mt-2">${sourceBadge(item)}</div>
+                        </div>
+                        <span class="rounded-full border px-3 py-1 text-xs font-bold ${statusClass(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
+                    </div>
+
+                    <div class="mt-4 rounded-xl bg-amber-50 border border-amber-100 p-4 text-amber-900">
+                        <p class="text-xs font-bold uppercase tracking-wide">Muốn học với:</p>
+                        <p class="font-black mt-1">${escapeHtml(registrationMentorName(item))}</p>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
+                        <p><b>MSSV:</b> ${escapeHtml(item.mssv || 'Chưa có')}</p>
+                        <p><b>Khoa:</b> ${escapeHtml(item.khoa || 'Chưa chọn')}</p>
+                        <p><b>Môn/kỹ năng:</b> ${escapeHtml(registrationSubject(item))}</p>
+                        <p><b>Trình độ:</b> ${escapeHtml(registrationLevel(item))}</p>
+                        <p><b>Lịch rảnh:</b> ${escapeHtml(registrationSchedule(item))}</p>
+                        <p><b>Ngày gửi:</b> ${escapeHtml(formatDate(item.createdAt))}</p>
+                    </div>
+
+                    <div class="mt-4 space-y-2 text-sm text-gray-700">
+                        <p><b>Nội dung muốn học:</b> ${escapeHtml(item.learningTopics || 'Chưa có')}</p>
+                        <p><b>Khó khăn đang gặp:</b> ${escapeHtml(item.difficulty || 'Chưa có')}</p>
+                        <p><b>Mục tiêu:</b> ${escapeHtml(item.goal || 'Chưa có')}</p>
+                        <p><b>Ghi chú:</b> ${escapeHtml(item.note || 'Không có')}</p>
+                    </div>
+
+                    <div class="mt-5 flex flex-wrap gap-2">
+                        <button onclick="updateRegistrationStatus('${escapeHtml(item.id)}', 'accepted')" class="bg-blue-50 text-blue-800 px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-100">Đã nhận</button>
+                        <button onclick="updateRegistrationStatus('${escapeHtml(item.id)}', 'done')" class="bg-green-50 text-green-800 px-3 py-2 rounded-lg text-sm font-bold hover:bg-green-100">Hoàn tất</button>
+                        <button onclick="updateRegistrationStatus('${escapeHtml(item.id)}', 'cancelled')" class="bg-red-50 text-red-800 px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-100">Hủy</button>
+                        <button onclick="deleteRegistration('${escapeHtml(item.id)}')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-700">Xóa</button>
+                    </div>
+                </article>
+            `).join('');
         }
 
         function renderMentors() {
             const list = document.getElementById('mentorList');
             const count = document.getElementById('mentorCount');
-            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            const filtered = allMentors.filter(mentor => matchesSearch([
+                mentor.name, mentor.role, mentor.company, mentor.khoa, mentor.email, mentor.lang, mentor.source, mentorSchedule(mentor), (mentor.skills || []).join(' ')
+            ].join(' ')));
 
-            const filtered = allMentors.filter(mentor => {
-                const text = `
-                    ${mentor.name || ''}
-                    ${mentor.role || ''}
-                    ${mentor.khoa || ''}
-                    ${(mentor.skills || []).join(' ')}
-                    ${mentor.lang || ''}
-                `.toLowerCase();
-
-                return text.includes(keyword);
-            });
-
-            count.innerText = `Tổng ${filtered.length} mentor`;
-
-            if (filtered.length === 0) {
-                list.innerHTML = `
-                    <div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">
-                        Không tìm thấy mentor nào.
-                    </div>
-                `;
+            count.textContent = `Tổng ${filtered.length} mentor`;
+            if (!filtered.length) {
+                list.innerHTML = '<div class="col-span-full bg-white rounded-2xl p-10 text-center text-gray-400 shadow-sm">Không tìm thấy mentor từ user.html.</div>';
                 return;
             }
 
             list.innerHTML = filtered.map(mentor => `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="h-24 bg-blue-900"></div>
-
                     <div class="px-6 pb-6 -mt-10">
                         <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-white bg-gray-200 shadow-md">
-                            <img src="${mentor.avatar}" alt="${mentor.name}" class="w-full h-full object-cover">
+                            <img src="${getSafeAvatar(mentor)}" alt="${escapeHtml(mentor.name || 'Mentor')}" class="w-full h-full object-cover">
                         </div>
-
                         <div class="mt-4">
-                            <h3 class="text-xl font-bold text-gray-900">${mentor.name || 'Không có tên'}</h3>
-                            <p class="text-sm text-blue-700 font-semibold uppercase mt-1">${mentor.role || 'Mentor'}</p>
-                            <p class="text-sm text-gray-500 mt-1">${mentor.khoa || 'MentU'}</p>
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">${escapeHtml(mentor.name || 'Không có tên')}</h3>
+                                    <p class="text-sm text-blue-700 font-semibold uppercase mt-1">${escapeHtml(mentor.role || 'Mentor')}</p>
+                                </div>
+                                ${sourceBadge(mentor)}
+                            </div>
+                            <p class="text-sm text-gray-500 mt-2">${escapeHtml(mentor.company || mentor.khoa || 'MentU')}</p>
+                            <p class="text-sm text-gray-600 mt-3"><b>Email:</b> ${escapeHtml(mentor.email || 'Chưa có')}</p>
+                            <p class="text-sm text-gray-600 mt-1"><b>Ngôn ngữ:</b> ${escapeHtml(mentor.lang || 'vn')}</p>
+                            <p class="text-sm text-gray-600 mt-1"><b>Lịch rảnh:</b> ${escapeHtml(mentorSchedule(mentor))}</p>
+                            
 
                             <div class="mt-4">
                                 <p class="text-xs font-bold text-gray-400 uppercase mb-2">Kỹ năng</p>
                                 <div class="flex flex-wrap gap-2">
-                                    ${(mentor.skills || []).map(skill => `
-                                        <span class="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">${skill}</span>
-                                    `).join('')}
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <p class="text-xs font-bold text-gray-400 uppercase mb-2">Email</p>
-                                <p class="text-sm text-gray-700">${mentor.email || 'Chưa có'}</p>
-                            </div>
-
-                            <div class="mt-4">
-                                <p class="text-xs font-bold text-gray-400 uppercase mb-2">Minh chứng chứng chỉ</p>
-                                <div class="flex">
-                                    ${mentor.certificate ? `<img src="${mentor.certificate}" class="w-16 h-16 object-cover rounded border">` : '<span class="text-gray-400 text-sm">Chưa có</span>'}
+                                    ${(mentor.skills || []).map(skill => `<span class="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">${escapeHtml(skill)}</span>`).join('') || '<span class="text-gray-400 text-sm">Chưa có</span>'}
                                 </div>
                             </div>
 
                             <div class="mt-4 flex items-center justify-between">
-                                <span class="text-sm text-gray-600">Ngôn ngữ: <b>${mentor.lang || 'Chưa có'}</b></span>
-                                <a href="profile.html?id=${mentor.id}" class="text-blue-900 font-semibold text-sm hover:underline">
-                                    Xem hồ sơ
-                                </a>
+                                <a href="profile.html?id=${escapeHtml(mentor.id)}" class="text-blue-900 font-semibold text-sm hover:underline">Xem hồ sơ</a>
+                                <button onclick="deleteMentor('${escapeHtml(mentor.id)}')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-700">Xóa</button>
                             </div>
-
-                            <button
-                                onclick="deleteMentor('${mentor.id}', '${(mentor.name || '').replace(/'/g, "\\'")}')"
-                                class="mt-5 w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition"
-                            >
-                                Xóa mentor này
-                            </button>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function deleteMentor(id, name) {
-            const confirmDelete = confirm(`Bạn có chắc muốn xóa mentor "${name}" không?`);
-            if (!confirmDelete) return;
+        function renderAll() {
+            renderStats();
+            renderRegistrations();
+            renderMentors();
+        }
 
-            db.ref(`mentors/${id}`).remove()
-                .then(() => {
-                    alert('Đã xóa mentor thành công');
-                })
+        async function reloadAll() {
+            try {
+                await authReady;
+                await loadUsers();
+                await Promise.all([loadMentors(), loadRegistrations()]);
+                renderAll();
+            } catch (error) {
+                console.error(error);
+                alert('Không thể tải dữ liệu từ Firebase. Hãy kiểm tra Rules và Anonymous Auth.');
+            }
+        }
+
+        function findRegistration(id) {
+            return allRegistrations.find(reg => String(reg.id) === String(id));
+        }
+
+        function findMentor(id) {
+            return allMentors.find(item => String(item.id) === String(id));
+        }
+
+        function itemRef(item, defaultPath) {
+            return db.ref(`${item._path || defaultPath}/${item._key || item.id}`);
+        }
+
+        function updateRegistrationStatus(id, status) {
+            const item = findRegistration(id);
+            if (!item) return alert('Không tìm thấy đăng ký này.');
+            itemRef(item, 'classRegistrations').update({ status, updatedAt: new Date().toISOString() })
+                .then(reloadAll)
                 .catch(error => {
                     console.error(error);
-                    alert('Lỗi khi xóa mentor');
+                    alert('Không đổi được trạng thái. Hãy kiểm tra quyền write trong Firebase Rules.');
                 });
         }
 
-        document.getElementById('searchInput').addEventListener('input', renderMentors);
+        function deleteRegistration(id) {
+            const item = findRegistration(id);
+            if (!item) return alert('Không tìm thấy đăng ký này.');
+            const name = registrationName(item);
+            if (!confirm(`Bạn có chắc muốn xóa đăng ký của "${name || 'học viên này'}" không?`)) return;
+            itemRef(item, 'classRegistrations').remove()
+                .then(reloadAll)
+                .catch(error => {
+                    console.error(error);
+                    alert('Lỗi khi xóa đăng ký.');
+                });
+        }
 
-        loadMentors();
+        function deleteMentor(id) {
+            const mentor = findMentor(id);
+            if (!mentor) return alert('Không tìm thấy mentor này.');
+            const name = mentor.name || 'mentor này';
+            if (!confirm(`Bạn có chắc muốn xóa mentor "${name}" không?`)) return;
+            itemRef(mentor, 'mentors').remove()
+                .then(reloadAll)
+                .catch(error => {
+                    console.error(error);
+                    alert('Lỗi khi xóa mentor.');
+                });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderAll);
+        reloadAll();
     </script>
 </body>
 </html>
