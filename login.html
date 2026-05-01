@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Đăng ký lớp - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -48,11 +48,11 @@
                 <div>
                     <p class="text-sm font-black uppercase tracking-[0.2em] text-blue-900">Route /login</p>
                     <h1 class="mt-2 text-3xl font-black text-slate-900">Đăng ký lớp học</h1>
-                    <p class="mt-2 max-w-2xl text-slate-600">Bạn chỉ cần nhập thông tin đăng ký. Sau khi gửi, hệ thống sẽ chuyển sang bước quét mã QR.</p>
+                    <p class="mt-2 max-w-2xl text-slate-600">Bạn chỉ cần nhập thông tin đăng ký. Sau khi gửi, hệ thống sẽ chuyển sang bước quét mã QR để thanh toán.</p>
                 </div>
                 <div class="rounded-2xl bg-blue-50 p-3 text-sm text-blue-900">
                     <b>Bước 1:</b> Điền thông tin<br>
-                    <b>Bước 2:</b> Quét QR thanh toán
+                    <b>Bước 2:</b> Quét QR thanh toán tự động
                 </div>
             </div>
         </section>
@@ -61,6 +61,7 @@
 
         <section id="formStep" class="rounded-3xl bg-white p-5 shadow-md md:p-8">
             <form id="classForm" class="space-y-6">
+                <!-- 1. Thông tin cơ bản -->
                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <h2 class="text-lg font-black text-slate-900">1. Thông tin cơ bản</h2>
                     <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -83,6 +84,7 @@
                     </div>
                 </div>
 
+                <!-- 2. Mentor -->
                 <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                     <h2 class="text-lg font-black text-amber-950">2. Mentor muốn học cùng</h2>
                     <label class="mt-4 block text-sm font-bold text-amber-900">Bạn muốn học với người dùng/mentor nào?</label>
@@ -92,6 +94,7 @@
                     <p id="mentorNotice" class="mt-2 text-sm text-amber-800">Bạn có thể để trống nếu muốn MentU tư vấn mentor phù hợp.</p>
                 </div>
 
+                <!-- 3. Nhu cầu -->
                 <div class="rounded-2xl border border-slate-200 p-4">
                     <h2 class="text-lg font-black text-slate-900">3. Nhu cầu học tập</h2>
                     <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -121,6 +124,7 @@
                     </div>
                 </div>
 
+                <!-- 4. Lịch rảnh -->
                 <div class="rounded-2xl border border-slate-200 p-4">
                     <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
@@ -129,61 +133,116 @@
                         </div>
                         <button type="button" onclick="clearSchedule('learnerSchedule')" class="self-start rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 md:self-auto">Xóa chọn</button>
                     </div>
-                    <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
+                    <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200 touch-pan-x">
                         <div id="learnerSchedule" class="schedule-grid grid grid-cols-[110px_repeat(7,minmax(82px,1fr))] bg-white text-center text-sm"></div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700">Hình thức học mong muốn</label>
-                        <select id="classFormat" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100">
-                            <option value="">Chưa chọn</option>
-                            <option value="Online">Online</option>
-                            <option value="Offline">Offline</option>
-                            <option value="Online hoặc Offline đều được">Online hoặc Offline đều được</option>
-                        </select>
+                <!-- 5. Hình thức -->
+                <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                    <h2 class="text-lg font-black text-blue-900">5. Hình thức & Thanh toán</h2>
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Hình thức học</label>
+                            <select id="classFormat" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100">
+                                <option value="">Chưa chọn</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                                <option value="Online hoặc Offline đều được">Online hoặc Offline đều được</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Thời lượng (phút)</label>
+                            <select id="duration" onchange="handleDurationChange()" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100">
+                                <option value="30">30 phút</option>
+                                <option value="45">45 phút</option>
+                                <option value="60" selected>60 phút</option>
+                                <option value="90">90 phút</option>
+                                <option value="120">120 phút</option>
+                                <option value="custom">Khác (Nhập số phút)</option>
+                            </select>
+                            <input type="number" id="customDuration" class="hidden mt-2 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="VD: 75" oninput="calculateTotal()">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700">Ghi chú thêm</label>
-                        <input type="text" id="note" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="Yêu cầu riêng, mong muốn về cách học...">
+
+                    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Mã Đăng Ký (Cố định & Duy nhất)</label>
+                            <div id="displayProjectCode" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-100 p-3 font-mono font-bold text-slate-600 outline-none">
+                                Đang tạo...
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700">Ghi chú thêm</label>
+                            <input type="text" id="note" class="mt-1 w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-100" placeholder="Yêu cầu riêng...">
+                        </div>
+                    </div>
+
+                    <div class="mt-5 rounded-xl bg-white border border-blue-200 p-4 text-center">
+                        <p class="text-sm font-bold text-slate-500">TỔNG CHI PHÍ DỰ KIẾN</p>
+                        <p id="totalCostDisplay" class="text-3xl font-black text-blue-900 mt-1">0 VNĐ</p>
                     </div>
                 </div>
 
                 <button type="submit" id="submitButton" class="w-full rounded-xl bg-blue-900 py-3 font-black text-white shadow-lg transition hover:bg-blue-800">
-                    Gửi thông tin và sang bước quét QR
+                    Lưu thông tin & Mở mã QR Thanh toán
                 </button>
             </form>
         </section>
 
+        <!-- BƯỚC QR & XÁC NHẬN THANH TOÁN -->
         <section id="qrStep" class="hidden rounded-3xl bg-white p-5 text-center shadow-md md:p-8">
             <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-green-700">
                 <i class="fas fa-check-circle text-3xl"></i>
             </div>
-            <h2 class="mt-4 text-3xl font-black text-slate-900">Đã lưu thông tin đăng ký</h2>
+            <h2 class="mt-4 text-3xl font-black text-slate-900">Thanh toán Booking</h2>
             <p id="qrMentorText" class="mt-2 text-slate-600"></p>
 
+            <div class="mt-6 rounded-xl bg-blue-50 border border-blue-200 p-6 text-center mx-auto max-w-md">
+                <p class="text-sm font-bold text-slate-500 uppercase mb-1">Số tiền cần thanh toán</p>
+                <p id="qrTotalCost" class="text-4xl font-black text-blue-900 mb-6">0 VNĐ</p>
+                <p class="text-sm font-bold text-slate-500 uppercase mb-1">Cú pháp chuyển khoản</p>
+                <div class="bg-white border-2 border-dashed border-blue-300 p-3 rounded-lg select-all cursor-pointer">
+                    <p id="qrSyntax" class="font-mono text-xl font-bold text-slate-800"></p>
+                </div>
+            </div>
+
+            <!-- HIỂN THỊ DYNAMIC QR TỪ VIETQR -->
             <div id="qrBox" class="mx-auto mt-6 max-w-md rounded-3xl border border-slate-200 bg-slate-50 p-5">
-    
+                <p class="text-sm font-bold text-slate-700 mb-3">Mở App Ngân hàng quét mã QR bên dưới</p>
                 <img 
-                    src="qr_code/2b6f63c4-182c-42c2-8a86-8153502ab1fa.jpg" 
+                    id="dynamicQrImage"
+                    src="" 
                     alt="Mã QR thanh toán MentU"
                     class="mx-auto max-h-[360px] w-full max-w-[320px] rounded-2xl border border-slate-200 bg-white object-contain p-2 shadow-sm"
                 >
-
-                <p class="mt-4 text-sm text-slate-500">
-                    Sau khi chuyển khoản, bạn có thể chụp màn hình giao dịch để đối chiếu khi MentU liên hệ.
+                <p class="mt-4 text-sm text-slate-500 italic">
+                    Hệ thống sẽ tự động điền đúng Số tiền và Cú pháp.
                 </p>
             </div>
 
+            <!-- NÚT XÁC NHẬN ĐÃ CHUYỂN KHOẢN -->
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                <a href="index.html" class="rounded-xl border border-blue-900 px-5 py-3 font-bold text-blue-900 hover:bg-blue-50">Về trang chủ</a>
-                <button type="button" onclick="resetFlow()" class="rounded-xl bg-blue-900 px-5 py-3 font-bold text-white hover:bg-blue-800">Đăng ký lớp khác</button>
+                <button type="button" onclick="goBackToForm()" class="rounded-xl border-2 border-slate-300 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">← Chỉnh sửa thông tin</button>
+                <button type="button" onclick="confirmPaymentPaid()" class="rounded-xl bg-[#d4af37] px-8 py-3 font-black text-white hover:brightness-95 shadow-lg transform hover:-translate-y-1 transition">
+                    TÔI ĐÃ CHUYỂN KHOẢN
+                </button>
+            </div>
+            <div class="mt-4 text-center">
+                <a href="index.html" class="text-sm font-semibold text-blue-600 hover:underline">Về trang chủ</a>
             </div>
         </section>
     </main>
 
     <script>
+        // ==========================================
+        // CẤU HÌNH THÔNG TIN NGÂN HÀNG CỦA BẠN (DÙNG CHO VIETQR)
+        // ==========================================
+        const MY_BANK_ID = "MB"; // Tên viết tắt hoặc BIN (VD: MB, VCB, TCB, ACB, TPB...)
+        const MY_ACCOUNT_NO = "0826505888"; // Số tài khoản ngân hàng của bạn
+        const MY_ACCOUNT_NAME = "PHAM NGOC ANH"; // Tên chủ tài khoản (Viết không dấu)
+        // ==========================================
+
         const firebaseConfig = {
             apiKey: "AIzaSyAGk1ElxXExiYyrzQzQ_wqLobafBs__muk",
             authDomain: "mentor-web-add47.firebaseapp.com",
@@ -203,18 +262,13 @@
         const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
         const dayLabels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
         const timeSlots = ['8h-10h', '10h-12h', '14h-16h', '17h-19h', '19h-21h'];
-        const fixedQrCandidates = [
-            'qr_code.png',
-            'qr_code.jpg',
-            'qr_code.jpeg',
-            'qr_code/qr_code.png',
-            'qr_code/qr_code.jpg',
-            'qr_code/qr.png',
-            'qr_code/qr.jpg',
-            'qr_code'
-        ];
+        
         let allMentors = [];
         let busy = false;
+        
+        // Sinh 1 ID cố định cho phiên đăng ký hiện tại
+        let currentRegistrationId = Date.now().toString();
+
         const authReady = auth.signInAnonymously().catch(error => {
             console.error('Firebase auth error:', error);
             showMessage('Không thể kết nối Firebase. Vui lòng thử lại sau.', 'error');
@@ -254,7 +308,7 @@
             busy = loading;
             const button = document.getElementById('submitButton');
             button.disabled = loading;
-            button.textContent = loading ? 'Đang lưu thông tin...' : 'Gửi thông tin và sang bước quét QR';
+            button.textContent = loading ? 'Đang lưu thông tin...' : 'Lưu thông tin & Mở mã QR Thanh toán';
             button.classList.toggle('opacity-70', loading);
         }
 
@@ -303,16 +357,52 @@
             }
         }
 
+        function handleDurationChange() {
+            const val = document.getElementById('duration').value;
+            if (val === 'custom') {
+                document.getElementById('customDuration').classList.remove('hidden');
+                document.getElementById('customDuration').required = true;
+            } else {
+                document.getElementById('customDuration').classList.add('hidden');
+                document.getElementById('customDuration').required = false;
+            }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const mentor = selectedMentor();
+            const price = mentor ? (Number(mentor.pricePerHour) || 0) : 0;
+            
+            let durationVal = document.getElementById('duration').value;
+            let duration = 60;
+            if (durationVal === 'custom') {
+                duration = parseInt(document.getElementById('customDuration').value) || 0;
+            } else {
+                duration = parseInt(durationVal) || 60;
+            }
+            
+            const total = Math.round((price / 60) * duration);
+            document.getElementById('totalCostDisplay').innerText = total.toLocaleString() + ' VNĐ';
+            return { total, duration };
+        }
+
+        function getTransferSyntax() {
+            const syntax = `MENTU BOOKING ${currentRegistrationId.slice(-6)}`;
+            document.getElementById('displayProjectCode').innerText = syntax;
+            return syntax;
+        }
+
         function renderMentorOptions() {
             const select = document.getElementById('mentorSelect');
             const options = ['<option value="">Cần MentU tư vấn mentor phù hợp</option>'];
             options.push(...allMentors.map(mentor => {
                 const selected = String(mentor.id) === String(preselectedMentorId) ? 'selected' : '';
-                const label = `${mentor.name || 'Mentor'}${mentor.lang ? ` - ${mentor.lang}` : ''}${mentor.khoa ? ` - ${mentor.khoa}` : ''}`;
+                const label = `${mentor.name || 'Mentor'} - ${(mentor.pricePerHour || 0).toLocaleString()}đ/h`;
                 return `<option value="${escapeHtml(mentor.id)}" ${selected}>${escapeHtml(label)}</option>`;
             }));
             select.innerHTML = options.join('');
             updateMentorNotice();
+            calculateTotal();
         }
 
         function loadMentors() {
@@ -329,28 +419,76 @@
                 });
         }
 
-        function showQrStep(mentor, registrationId) {
+        function showQrStep(mentor, totalCost, transferSyntax) {
             const mentorText = mentor
-                ? `Bạn đã chọn học với ${mentor.name || 'mentor'}. Mã đăng ký: ${registrationId}`
-                : `Bạn chưa chọn mentor cụ thể. Mã đăng ký: ${registrationId}`;
-            document.getElementById('qrMentorText').textContent = `${mentorText}. Vui lòng quét mã QR thanh toán cố định bên dưới.`;     
+                ? `Bạn đã chọn học với ${mentor.name || 'mentor'}.`
+                : `Bạn chưa chọn mentor cụ thể.`;
+            document.getElementById('qrMentorText').textContent = `${mentorText}`;     
+            
+            document.getElementById('qrTotalCost').innerText = totalCost.toLocaleString() + ' VNĐ';
+            document.getElementById('qrSyntax').innerText = transferSyntax;
+
+            // ==========================================
+            // TẠO QR ĐỘNG BẰNG VIETQR THEO SỐ TIỀN & CÚ PHÁP
+            // ==========================================
+            const dynamicQrUrl = `https://img.vietqr.io/image/${MY_BANK_ID}-${MY_ACCOUNT_NO}-compact2.png?amount=${totalCost}&addInfo=${encodeURIComponent(transferSyntax)}&accountName=${encodeURIComponent(MY_ACCOUNT_NAME)}`;
+            document.getElementById('dynamicQrImage').src = dynamicQrUrl;
 
             document.getElementById('formStep').classList.add('hidden');
             document.getElementById('qrStep').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function goBackToForm() {
+            document.getElementById('qrStep').classList.add('hidden');
+            document.getElementById('formStep').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // HÀM MỚI: XÁC NHẬN TÔI ĐÃ CHUYỂN KHOẢN
+        async function confirmPaymentPaid() {
+            try {
+                // Cập nhật trạng thái thanh toán lên Firebase
+                await db.ref(`classRegistrations/${currentRegistrationId}`).update({
+                    paymentStatus: 'paid'
+                });
+                alert('Cảm ơn bạn! Hệ thống đã ghi nhận trạng thái Đã Chuyển Khoản. Quản trị viên sẽ kiểm tra và liên hệ lại với bạn.');
+                
+                // Đổi ID mới để có thể đăng ký lớp khác mà form không bị reset data
+                currentRegistrationId = Date.now().toString(); 
+                getTransferSyntax(); 
+                
+                document.getElementById('classForm').reset();
+                clearSchedule('learnerSchedule');
+                document.getElementById('qrStep').classList.add('hidden');
+                document.getElementById('formStep').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (error) {
+                console.error('Lỗi khi xác nhận thanh toán:', error);
+                alert('Lỗi khi ghi nhận thanh toán. Vui lòng thử lại!');
+            }
+        }
+
         function resetFlow() {
+            currentRegistrationId = Date.now().toString(); // Tạo ID mới cho luồng mới
+            getTransferSyntax(); // Cập nhật lại UI
+            
             document.getElementById('classForm').reset();
             clearSchedule('learnerSchedule');
             document.getElementById('qrStep').classList.add('hidden');
             document.getElementById('formStep').classList.remove('hidden');
+            
             updateMentorNotice();
+            handleDurationChange();
             hideMessage();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        document.getElementById('mentorSelect').addEventListener('change', updateMentorNotice);
+        document.getElementById('mentorSelect').addEventListener('change', () => {
+            updateMentorNotice();
+            calculateTotal();
+        });
 
         document.getElementById('classForm').addEventListener('submit', async event => {
             event.preventDefault();
@@ -368,10 +506,14 @@
             try {
                 const mentor = selectedMentor();
                 const now = new Date().toISOString();
-                const registrationId = Date.now().toString();
                 const scheduleSlots = getSchedule('learnerSchedule');
+                
+                const { total: totalCost, duration } = calculateTotal();
+                const projectCode = 'MENTU'; // Đã fix cố định cho hệ thống
+                const transferSyntax = getTransferSyntax();
+
                 const registration = {
-                    id: registrationId,
+                    id: currentRegistrationId,
                     type: 'class-registration',
                     learnerName,
                     email: getValue('email'),
@@ -387,19 +529,23 @@
                     scheduleSlots,
                     preferredSchedule: scheduleSlots.join(', '),
                     classFormat: getValue('classFormat'),
+                    duration: duration,
+                    projectCode,
+                    totalCost,
+                    transferSyntax,
                     note: getValue('note'),
                     status: 'new',
-                    paymentStatus: 'waiting_for_transfer',
+                    paymentStatus: 'unpaid', // Mặc định là chưa thanh toán khi vừa submit
                     source: 'login.html',
                     createdAt: now,
                     updatedAt: now
                 };
 
                 await authReady;
-                await db.ref(`classRegistrations/${registrationId}`).set(registration);
+                await db.ref(`classRegistrations/${currentRegistrationId}`).set(registration);
 
                 showMessage('Đã lưu thông tin. Vui lòng quét mã QR ở bước tiếp theo.', 'success');
-                showQrStep(mentor, registrationId);
+                showQrStep(mentor, totalCost, transferSyntax);
             } catch (error) {
                 console.error('Lỗi lưu đăng ký lớp:', error);
                 const detail = error && error.message ? ' Chi tiết: ' + error.message : '';
@@ -409,6 +555,8 @@
             }
         });
 
+        // Initialize display
+        getTransferSyntax();
         renderSchedule('learnerSchedule');
         loadMentors();
     </script>

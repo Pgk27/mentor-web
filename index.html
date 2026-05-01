@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MentU - Bridging Talents, Guiding Success</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -330,7 +330,7 @@
                         <div class="h-24 bg-gradient-to-r ${bgTone}"></div>
                         <div class="px-5 pb-5 -mt-12 relative z-10 flex-1 flex flex-col text-center">
                             <div class="w-24 h-24 rounded-full mx-auto border-[5px] border-[#d4af37] shadow-md bg-slate-100 overflow-hidden mb-4">
-                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'w-full h-full flex items-center justify-center text-blue-900 font-black text-xl bg-slate-100\'>${initialsFromName(mentor.name)}</div>'">
+                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class='w-full h-full flex items-center justify-center text-blue-900 font-black text-xl bg-slate-100'>${initialsFromName(mentor.name)}</div>'">
                             </div>
 
                             <h4 class="font-black text-2xl text-slate-900 leading-tight">${escapeHtml(mentor.name || 'Chưa có tên')}</h4>
@@ -371,7 +371,7 @@
                     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                         <div class="flex flex-col md:flex-row md:items-end gap-5">
                             <div class="w-32 h-32 rounded-full border-[6px] border-[#d4af37] bg-white shadow-xl overflow-hidden">
-                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=\'w-full h-full flex items-center justify-center text-blue-900 font-black text-3xl bg-slate-100\'>${initialsFromName(mentor.name)}</div>'">
+                                <img src="${safeAvatar}" alt="${escapeHtml(mentor.name)}" class="w-full h-full object-cover" onerror="this.outerHTML='<div class='w-full h-full flex items-center justify-center text-blue-900 font-black text-3xl bg-slate-100'>${initialsFromName(mentor.name)}</div>'">
                             </div>
                             <div>
                                 <h3 class="text-3xl md:text-4xl font-black text-slate-900">${escapeHtml(mentor.name || 'Chưa có tên')}</h3>

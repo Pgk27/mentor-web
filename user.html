@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quản lý Mentor - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -22,7 +22,7 @@
                 margin: 0;
             }
             input, select, textarea {
-                font-size: 16px; /* Prevent zoom on iOS */
+                font-size: 16px;
                 padding: 0.5rem;
             }
             h2 {
@@ -30,7 +30,7 @@
                 margin-bottom: 1rem;
             }
             .grid-cols-1.md\:grid-cols-2 {
-                grid-template-columns: 1fr; /* Force single column on mobile */
+                grid-template-columns: 1fr;
                 gap: 0.5rem;
             }
             .space-y-4 > * + * {
@@ -55,9 +55,15 @@
                 </div>
             </div>
             
-            <div>
-                <label class="block text-sm font-medium">Mã số sinh viên (MSSV)</label>
-                <input type="text" id="mssv" class="w-full border p-2 rounded" placeholder="Vd: 12345678">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Mã số sinh viên (MSSV)</label>
+                    <input type="text" id="mssv" class="w-full border p-2 rounded" placeholder="Vd: 12345678">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-blue-700">Giá tư vấn / 1 giờ (VNĐ)</label>
+                    <input type="number" id="pricePerHour" class="w-full border p-2 rounded border-blue-300 bg-blue-50" placeholder="Vd: 200000" required>
+                </div>
             </div>
 
             <div>
@@ -182,6 +188,7 @@
                 id: mentorId,
                 name: inputName,
                 role: document.getElementById('role').value.trim() || 'Mentor',
+                pricePerHour: Number(document.getElementById('pricePerHour').value) || 0,
                 mssv: document.getElementById('mssv').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 skills: document.getElementById('skills').value

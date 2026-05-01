@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quản lý - MentU</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -153,6 +153,14 @@
             if (status === 'cancelled') return 'bg-red-50 text-red-800 border-red-100';
             return 'bg-amber-50 text-amber-800 border-amber-100';
         }
+        
+        // HÀM HIỂN THỊ BADGE THANH TOÁN
+        function paymentBadge(pStatus) {
+            if (pStatus === 'paid') {
+                return '<span class="bg-green-100 text-green-800 border border-green-300 px-2.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wide shadow-sm"><i class="fas fa-check-circle mr-1"></i>Đã CK</span>';
+            }
+            return '<span class="bg-gray-100 text-gray-600 border border-gray-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide"><i class="fas fa-clock mr-1"></i>Chưa CK</span>';
+        }
 
         function getObjectItems(data, pathName, defaultSource = '') {
             return Object.entries(data || {}).map(([key, value]) => ({
@@ -293,7 +301,10 @@
                         <div>
                             <h3 class="text-xl font-bold text-gray-900">${escapeHtml(registrationName(item))}</h3>
                             <p class="text-sm text-gray-500 mt-1">${escapeHtml(item.email || 'Chưa có email')} ${item.phone ? '· ' + escapeHtml(item.phone) : ''}</p>
-                            <div class="mt-2">${sourceBadge(item)}</div>
+                            <div class="mt-2 flex gap-2 items-center">
+                                ${sourceBadge(item)}
+                                ${paymentBadge(item.paymentStatus)}
+                            </div>
                         </div>
                         <span class="rounded-full border px-3 py-1 text-xs font-bold ${statusClass(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
                     </div>
@@ -303,17 +314,29 @@
                         <p class="font-black mt-1">${escapeHtml(registrationMentorName(item))}</p>
                     </div>
 
+                    <div class="mt-4 rounded-xl bg-blue-50 border border-blue-100 p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs font-bold text-blue-800 uppercase tracking-wide">Cú pháp CK:</p>
+                                <p class="font-black text-blue-900 mt-1">${escapeHtml(item.transferSyntax || 'N/A')}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-blue-800 uppercase tracking-wide">Tổng phí:</p>
+                                <p class="font-black text-blue-900 mt-1 text-lg">${(item.totalCost || 0).toLocaleString()} VNĐ</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
                         <p><b>MSSV:</b> ${escapeHtml(item.mssv || 'Chưa có')}</p>
                         <p><b>Khoa:</b> ${escapeHtml(item.khoa || 'Chưa chọn')}</p>
-                        <p><b>Môn/kỹ năng:</b> ${escapeHtml(registrationSubject(item))}</p>
+                        <p><b>Môn/kỹ năng:</b> ${escapeHtml(registrationSubject(item))} (${item.duration || 60} phút)</p>
                         <p><b>Trình độ:</b> ${escapeHtml(registrationLevel(item))}</p>
                         <p><b>Lịch rảnh:</b> ${escapeHtml(registrationSchedule(item))}</p>
                         <p><b>Ngày gửi:</b> ${escapeHtml(formatDate(item.createdAt))}</p>
                     </div>
 
                     <div class="mt-4 space-y-2 text-sm text-gray-700">
-                        <p><b>Nội dung muốn học:</b> ${escapeHtml(item.learningTopics || 'Chưa có')}</p>
                         <p><b>Khó khăn đang gặp:</b> ${escapeHtml(item.difficulty || 'Chưa có')}</p>
                         <p><b>Mục tiêu:</b> ${escapeHtml(item.goal || 'Chưa có')}</p>
                         <p><b>Ghi chú:</b> ${escapeHtml(item.note || 'Không có')}</p>
@@ -361,8 +384,8 @@
                             <p class="text-sm text-gray-600 mt-3"><b>Email:</b> ${escapeHtml(mentor.email || 'Chưa có')}</p>
                             <p class="text-sm text-gray-600 mt-1"><b>Ngôn ngữ:</b> ${escapeHtml(mentor.lang || 'vn')}</p>
                             <p class="text-sm text-gray-600 mt-1"><b>Lịch rảnh:</b> ${escapeHtml(mentorSchedule(mentor))}</p>
+                            <p class="text-sm text-gray-600 mt-1"><b>Giá tư vấn:</b> ${(mentor.pricePerHour || 0).toLocaleString()} VNĐ/giờ</p>
                             
-
                             <div class="mt-4">
                                 <p class="text-xs font-bold text-gray-400 uppercase mb-2">Kỹ năng</p>
                                 <div class="flex flex-wrap gap-2">
